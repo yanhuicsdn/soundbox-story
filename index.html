@@ -382,8 +382,34 @@
                         <input type="text" id="selected-product" readonly>
                     </div>
                     <div class="form-group">
-                        <label for="name">您的姓名 *</label>
-                        <input type="text" id="name" required placeholder="请输入姓名">
+                        <label for="child-name">宝宝名字 *</label>
+                        <input type="text" id="child-name" required placeholder="请输入宝宝的名字">
+                    </div>
+                    <div class="form-group">
+                        <label for="voice-type">选择声音 *</label>
+                        <select id="voice-type" required>
+                            <option value="">请选择</option>
+                            <option value="爸爸">爸爸的声音</option>
+                            <option value="妈妈">妈妈的声音</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="child-age">孩子年龄</label>
+                        <select id="child-age">
+                            <option value="">请选择</option>
+                            <option value="1">1岁</option>
+                            <option value="2">2岁</option>
+                            <option value="3">3岁</option>
+                            <option value="4">4岁</option>
+                            <option value="5">5岁</option>
+                            <option value="6">6岁</option>
+                            <option value="7">7岁</option>
+                            <option value="8">8岁</option>
+                            <option value="9">9岁</option>
+                            <option value="10">10岁</option>
+                            <option value="11">11岁</option>
+                            <option value="12">12岁</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="email">邮箱地址 *</label>
@@ -392,18 +418,6 @@
                     <div class="form-group">
                         <label for="wechat">微信号（选填）</label>
                         <input type="text" id="wechat" placeholder="便于我们联系您">
-                    </div>
-                    <div class="form-group">
-                        <label for="child-age">孩子年龄</label>
-                        <select id="child-age">
-                            <option value="">请选择</option>
-                            <option value="3">3岁</option>
-                            <option value="4">4岁</option>
-                            <option value="5">5岁</option>
-                            <option value="6">6岁</option>
-                            <option value="7">7岁</option>
-                            <option value="8">8岁</option>
-                        </select>
                     </div>
 
                     <button type="submit" class="btn btn-primary btn-block">下一步：录制声音</button>
@@ -453,7 +467,7 @@
                         <span id="summary-product"></span>
                     </div>
                     <div class="summary-item">
-                        <span>联系人：</span>
+                        <span>宝宝：</span>
                         <span id="summary-name"></span>
                     </div>
                     <div class="summary-item">

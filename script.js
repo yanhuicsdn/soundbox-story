@@ -79,10 +79,11 @@ function submitOrder(event) {
     event.preventDefault();
 
     // 收集表单数据
-    orderData.name = document.getElementById('name').value;
+    orderData.childName = document.getElementById('child-name').value;
+    orderData.voiceType = document.getElementById('voice-type').value;
+    orderData.childAge = document.getElementById('child-age').value;
     orderData.email = document.getElementById('email').value;
     orderData.wechat = document.getElementById('wechat').value;
-    orderData.childAge = document.getElementById('child-age').value;
 
     // 切换到录音界面
     document.getElementById('order-form').style.display = 'none';
@@ -194,7 +195,7 @@ function proceedToPayment() {
 
     // 填充订单摘要
     document.getElementById('summary-product').textContent = orderData.product.name;
-    document.getElementById('summary-name').textContent = orderData.name;
+    document.getElementById('summary-name').textContent = orderData.childName + '（' + orderData.voiceType + '的声音）';
     document.getElementById('summary-email').textContent = orderData.email;
     document.getElementById('summary-price').textContent = '¥' + orderData.product.price;
 

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>声宝盒 - 我的故事包</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        .player-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .story-number {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .story-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2C3E50;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-play {
+            background: linear-gradient(135deg, #FF6B6B 0%, #FF8E8E 100%);
+            color: white;
+        }
+
+        .btn-play:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #2C3E50;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .playlist {
+            margin-top: 30px;
+        }
+
+        .playlist-title {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .playlist-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .playlist-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .playlist-item.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-left: 4px solid white;
+        }
+
+        .playlist-item .index {
+            font-weight: 600;
+            margin-right: 15px;
+        }
+
+        .playlist-item .title {
+            flex: 1;
+        }
+
+        .playlist-item .duration {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 28px;
+            }
+
+            .player-card {
+                padding: 20px;
+            }
+
+            .story-title {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 声宝盒</h1>
+            <p>用爸爸妈妈的声音，讲最好听的故事</p>
+        </div>
+
+        <!-- 当前播放 -->
+        <div class="player-card">
+            <div class="player-header">
+                <div class="story-number">第 <span id="current-index">1</span> 个故事</div>
+                <div class="story-title" id="current-title">加载中...</div>
+            </div>
+            <audio id="audio-player" controls>
+                <source src="" type="audio/mpeg">
+                您的浏览器不支持音频播放
+            </audio>
+            <div class="controls">
+                <button class="btn btn-play" onclick="togglePlay()">
+                    <span id="play-icon">▶️ 播放</span>
+                </button>
+                <button class="btn btn-secondary" onclick="playPrevious()">
+                    ⏮️ 上一个
+                </button>
+                <button class="btn btn-secondary" onclick="playNext()">
+                    ⏭️ 下一个
+                </button>
+                <button class="btn btn-secondary" onclick="toggleAutoPlay()">
+                    <span id="autoplay-icon">🔁 连播：关</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- 播放列表 -->
+        <div class="playlist">
+            <h2 class="playlist-title">📚 故事列表</h2>
+            <div id="playlist-items">
+                <!-- 播放列表将通过JavaScript动态生成 -->
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>© 2024 声宝盒 - 用你的声音，给孩子最好的陪伴</p>
+            <p>此播放器可离线使用，建议收藏到主屏幕</p>
+        </div>
+    </div>
+
+    <script>
+        // 故事列表配置
+        // TODO: 根据实际生成的故事文件修改
+        const stories = [
+            { title: '小兔子乖乖', duration: '3:45', file: 'story001.mp3' },
+            { title: '三只小猪', duration: '4:20', file: 'story002.mp3' },
+            { title: '小红帽', duration: '5:10', file: 'story003.mp3' },
+            { title: '白雪公主', duration: '6:30', file: 'story004.mp3' },
+            { title: '灰姑娘', duration: '5:45', file: 'story005.mp3' },
+            { title: '睡美人', duration: '4:55', file: 'story006.mp3' },
+            { title: '青蛙王子', duration: '4:15', file: 'story007.mp3' },
+            { title: ' Hansel和Gretel', duration: '5:30', file: 'story008.mp3' },
+            { title: '金发姑娘', duration: '3:50', file: 'story009.mp3' },
+            { title: '狼和七只小山羊', duration: '4:40', file: 'story010.mp3' },
+            { title: '猫和老鼠', duration: '3:35', file: 'story011.mp3' },
+            { title: '乌龟和兔子', duration: '3:25', file: 'story012.mp3' }
+        ];
+
+        let currentIndex = 0;
+        let isPlaying = false;
+        let autoPlay = false;
+
+        const audioPlayer = document.getElementById('audio-player');
+        const currentTitle = document.getElementById('current-title');
+        const currentIndexSpan = document.getElementById('current-index');
+        const playIcon = document.getElementById('play-icon');
+        const autoplayIcon = document.getElementById('autoplay-icon');
+        const playlistItems = document.getElementById('playlist-items');
+
+        // 初始化播放列表
+        function initPlaylist() {
+            playlistItems.innerHTML = '';
+            stories.forEach((story, index) => {
+                const item = document.createElement('div');
+                item.className = 'playlist-item';
+                if (index === currentIndex) {
+                    item.classList.add('active');
+                }
+                item.innerHTML = `
+                    <span class="index">${index + 1}</span>
+                    <span class="title">${story.title}</span>
+                    <span class="duration">${story.duration}</span>
+                `;
+                item.onclick = () => playStory(index);
+                playlistItems.appendChild(item);
+            });
+        }
+
+        // 播放指定故事
+        function playStory(index) {
+            if (index < 0 || index >= stories.length) return;
+
+            currentIndex = index;
+            const story = stories[currentIndex];
+
+            currentTitle.textContent = story.title;
+            currentIndexSpan.textContent = currentIndex + 1;
+            audioPlayer.src = story.file;
+            audioPlayer.play();
+            isPlaying = true;
+            updatePlayButton();
+            updatePlaylistActive();
+
+            // 滚动到顶部
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 切换播放/暂停
+        function togglePlay() {
+            if (isPlaying) {
+                audioPlayer.pause();
+            } else {
+                if (!audioPlayer.src) {
+                    playStory(0);
+                } else {
+                    audioPlayer.play();
+                }
+            }
+            isPlaying = !isPlaying;
+            updatePlayButton();
+        }
+
+        // 更新播放按钮
+        function updatePlayButton() {
+            playIcon.textContent = isPlaying ? '⏸️ 暂停' : '▶️ 播放';
+        }
+
+        // 上一个
+        function playPrevious() {
+            let newIndex = currentIndex - 1;
+            if (newIndex < 0) newIndex = stories.length - 1;
+            playStory(newIndex);
+        }
+
+        // 下一个
+        function playNext() {
+            let newIndex = currentIndex + 1;
+            if (newIndex >= stories.length) newIndex = 0;
+            playStory(newIndex);
+        }
+
+        // 切换自动连播
+        function toggleAutoPlay() {
+            autoPlay = !autoPlay;
+            autoplayIcon.textContent = autoPlay ? '🔁 连播：开' : '🔁 连播：关';
+        }
+
+        // 更新播放列表激活状态
+        function updatePlaylistActive() {
+            const items = playlistItems.querySelectorAll('.playlist-item');
+            items.forEach((item, index) => {
+                if (index === currentIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
+        // 音频播放事件
+        audioPlayer.addEventListener('play', () => {
+            isPlaying = true;
+            updatePlayButton();
+        });
+
+        audioPlayer.addEventListener('pause', () => {
+            isPlaying = false;
+            updatePlayButton();
+        });
+
+        // 音频播放结束事件
+        audioPlayer.addEventListener('ended', () => {
+            if (autoPlay) {
+                playNext();
+            }
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                togglePlay();
+            } else if (e.code === 'ArrowLeft') {
+                playPrevious();
+            } else if (e.code === 'ArrowRight') {
+                playNext();
+            }
+        });
+
+        // 初始化
+        initPlaylist();
+    </script>
+</body>
+</html>

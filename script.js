@@ -283,37 +283,29 @@ function proceedToPayment() {
 }
 
 // ===== 支付提交 =====
-document.getElementById('submitPayment').addEventListener('click', async function() {
-    const paymentMethod = document.querySelector('input[name="payment"]:checked').value;
-
+document.getElementById('submitPayment').addEventListener('click', function() {
     // 禁用按钮,防止重复提交
     this.disabled = true;
-    this.textContent = '处理中...';
+    this.textContent = '跳转中...';
 
-    try {
-        // TODO: 这里需要对接你的后端API
-        // 1. 上传录音文件
-        // 2. 提交订单数据
-        // 3. 获取支付链接
+    // 生成订单ID
+    const orderId = 'SB' + Date.now();
 
-        // 模拟API调用
-        await uploadRecordingAndOrder();
+    // 构建支付页面URL参数
+    const params = new URLSearchParams({
+        orderId: orderId,
+        product: orderData.product.name,
+        amount: orderData.product.price,
+        childName: orderData.childName,
+        voiceType: orderData.voiceType,
+        email: orderData.email
+    });
 
-        // 跳转到支付页面
-        if (paymentMethod === 'wechat') {
-            // 微信支付
-            window.location.href = 'https://pay.weixin.qq.com/'; // 替换为实际的支付链接
-        } else {
-            // 支付宝
-            window.location.href = 'https://www.alipay.com/'; // 替换为实际的支付链接
-        }
+    // 跳转到支付页面
+    const payUrl = window.location.origin + '/payment-integration.html?' + params.toString();
 
-    } catch (error) {
-        console.error('支付失败:', error);
-        alert('订单提交失败,请重试。错误信息: ' + error.message);
-        this.disabled = false;
-        this.textContent = '立即支付';
-    }
+    console.log('跳转到支付页面:', payUrl);
+    window.location.href = payUrl;
 });
 
 async function uploadRecordingAndOrder() {

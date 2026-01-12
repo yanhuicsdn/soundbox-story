@@ -64,6 +64,14 @@ export default async function handler(req, res) {
         console.log('商品名称:', productName);
         console.log('金额:', amount);
 
+        // 获取客户端IP地址
+        const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || 
+                        req.headers['x-real-ip'] || 
+                        req.connection?.remoteAddress || 
+                        '127.0.0.1';
+
+        console.log('客户端IP:', clientIp);
+
         // 构建请求参数 - 使用 mapi.php 接口(推荐)
         const params = {
             pid: PAY_CONFIG.pid,
@@ -73,6 +81,7 @@ export default async function handler(req, res) {
             return_url: PAY_CONFIG.returnUrl,
             name: productName,
             money: amount.toFixed(2),
+            clientip: clientIp, // 用户IP地址（必需）
             device: 'jump', // 自适应页面
             param: JSON.stringify({
                 childName,

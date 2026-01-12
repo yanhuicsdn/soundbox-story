@@ -5,11 +5,8 @@ __pycache__/
 *.pyo
 *.pyd
 
-# Node modules (server side)
+# Node modules
 node_modules/
-package.json
-package-lock.json
-server.js
 
 # Environment files
 .env
@@ -32,3 +29,6 @@ PROJECT_*.md
 
 # Large data files
 story.json
+
+# Scripts directory (测试脚本不需要部署)
+scripts/

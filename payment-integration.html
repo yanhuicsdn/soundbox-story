@@ -51,7 +51,7 @@
             background: #f8f9fa;
             border-radius: 12px;
             padding: 20px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
 
         .order-info h3 {
@@ -87,18 +87,33 @@
             font-size: 24px;
         }
 
-        .alipay-notice {
-            background: #e6f7ff;
-            border-left: 4px solid #1677FF;
+        .notice {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
             padding: 15px;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border-radius: 8px;
         }
 
-        .alipay-notice p {
+        .notice.warning {
+            background: #fff3cd;
+            border-left-color: #ffc107;
+        }
+
+        .notice.error {
+            background: #f8d7da;
+            border-left-color: #dc3545;
+        }
+
+        .notice p {
             color: #333;
             font-size: 14px;
             line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .notice p:last-child {
+            margin-bottom: 0;
         }
 
         .pay-button {
@@ -136,21 +151,21 @@
             display: none;
         }
 
-        .payment-status.success {
+        .payment-status.show {
             display: block;
         }
 
-        .payment-status.success .icon {
+        .payment-status .icon {
             font-size: 64px;
             margin-bottom: 20px;
         }
 
-        .payment-status.success h2 {
+        .payment-status h2 {
             color: #52c41a;
             margin-bottom: 10px;
         }
 
-        .payment-status.success p {
+        .payment-status p {
             color: #666;
             margin-bottom: 20px;
         }
@@ -190,14 +205,36 @@
             100% { transform: rotate(360deg); }
         }
 
-        .alipay-badge {
-            display: inline-block;
-            background: #1677FF;
-            color: white;
-            padding: 4px 12px;
+        .demo-notice {
+            background: #e6f7ff;
+            border: 2px dashed #1677FF;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .demo-notice h3 {
+            color: #1677FF;
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .demo-notice p {
+            color: #333;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .code-block {
+            background: #f5f5f5;
+            padding: 10px;
             border-radius: 4px;
+            font-family: 'Courier New', monospace;
             font-size: 12px;
-            margin-left: 10px;
+            margin: 10px 0;
+            color: #d63384;
         }
     </style>
 </head>
@@ -215,6 +252,17 @@
                 </svg>
                 <h1>💳 支付宝支付</h1>
                 <p>安全便捷的支付方式</p>
+            </div>
+
+            <div class="demo-notice">
+                <h3>⚠️ 支付服务器未启动</h3>
+                <p><strong>这是演示模式</strong>，实际的支付功能需要部署支付服务器。</p>
+                <p>支付服务器是一个独立的 Node.js 程序，需要单独部署到云服务器上。</p>
+                <div class="code-block">
+                    cd /Users/yanhui/soundbox-story<br>
+                    node payment-payqixiang.js
+                </div>
+                <p>详细部署指南请查看项目中的 <code>DEPLOYMENT_GUIDE.md</code> 文件</p>
             </div>
 
             <div class="order-info">
@@ -241,39 +289,39 @@
                 </div>
             </div>
 
-            <div class="alipay-notice">
-                <p><strong>🔒 支付说明</strong></p>
-                <p>• 点击下方按钮将跳转到支付宝收银台</p>
-                <p>• 请在支付宝页面完成支付</p>
-                <p>• 支付成功后会自动返回本页面</p>
+            <div class="notice warning">
+                <p><strong>🔒 当前状态</strong></p>
+                <p>• 支付服务器未启动或未配置</p>
+                <p>• 您可以点击下方按钮查看演示流程</p>
+                <p>• 实际支付需要部署支付服务器后才能使用</p>
             </div>
 
-            <button class="pay-button" id="payButton" onclick="createPayment()">
-                前往支付宝支付
+            <button class="pay-button" id="payButton" onclick="demoPayment()">
+                演示支付流程
             </button>
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>正在创建支付订单...</p>
+                <p>正在处理...</p>
             </div>
         </div>
 
         <!-- 支付成功 -->
-        <div class="payment-status success" id="successStatus">
+        <div class="payment-status" id="successStatus">
             <div class="icon">✅</div>
-            <h2>支付成功！</h2>
-            <p>您的订单已支付成功，我们将尽快为您生成定制语音故事。</p>
+            <h2>演示：支付成功！</h2>
+            <p>这是演示模式，实际支付需要部署支付服务器。</p>
             <p>订单号: <strong id="successOrderId">-</strong></p>
+            <p style="color: #999; font-size: 14px; margin-top: 20px;">
+                💡 提示：要启用实际支付功能，请按照 DEPLOYMENT_GUIDE.md 部署支付服务器
+            </p>
             <a href="/" class="back-button">返回首页</a>
         </div>
     </div>
 
     <script>
-        // API配置
-        // 注意：支付服务器需要单独部署
-        // 开发环境: http://localhost:3000
-        // 生产环境: 需要部署到云服务器并配置域名
-        const API_BASE_URL = 'http://localhost:3000'; // 请替换为实际的支付服务器地址
+        // API配置 - 使用 Vercel Serverless Functions
+        const API_BASE_URL = window.location.origin; // 使用当前域名，自动适配开发和生产环境
 
         // 从URL获取订单信息
         const urlParams = new URLSearchParams(window.location.search);
@@ -297,9 +345,67 @@
             document.getElementById('amount').textContent = '¥' + orderData.amount.toFixed(2);
 
             console.log('订单数据:', orderData);
+
+            // 尝试连接支付服务器
+            checkPaymentServer();
         }
 
-        // 创建支付订单
+        // 检查支付服务器是否可用
+        async function checkPaymentServer() {
+            try {
+                console.log('检查支付服务器...');
+                const response = await fetch(API_BASE_URL + '/api/payment-query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        orderId: 'TEST'
+                    }),
+                    signal: AbortSignal.timeout(3000) // 3秒超时
+                });
+
+                // 即使返回错误，只要能连接就说明API可用
+                console.log('✅ API可用');
+                enableRealPayment();
+
+            } catch (error) {
+                console.log('❌ API不可用:', error.message);
+                // API不可用，显示演示模式
+                showDemoMode();
+            }
+        }
+
+        // 启用真实支付
+        function enableRealPayment() {
+            const payButton = document.getElementById('payButton');
+            const demoNotice = document.querySelector('.demo-notice');
+            const notice = document.querySelector('.notice.warning');
+
+            // 移除演示提示
+            demoNotice.style.display = 'none';
+
+            // 更新提示信息
+            notice.innerHTML = `
+                <p><strong>🔒 支付说明</strong></p>
+                <p>• 点击下方按钮将跳转到支付宝收银台</p>
+                <p>• 请在支付宝页面完成支付</p>
+                <p>• 支付成功后会自动返回本页面</p>
+            `;
+            notice.className = 'notice';
+
+            // 更新按钮
+            payButton.textContent = '前往支付宝支付';
+            payButton.onclick = createPayment;
+        }
+
+        // 显示演示模式
+        function showDemoMode() {
+            console.log('显示演示模式');
+            // 已经在HTML中设置了演示模式的提示
+        }
+
+        // 创建真实支付订单
         async function createPayment() {
             const loading = document.getElementById('loading');
             const payButton = document.getElementById('payButton');
@@ -309,9 +415,9 @@
 
             try {
                 console.log('创建支付订单...');
-                console.log('API地址:', API_BASE_URL + '/api/payment/create');
+                console.log('API地址:', API_BASE_URL + '/api/payment-create');
 
-                const response = await fetch(API_BASE_URL + '/api/payment/create', {
+                const response = await fetch(API_BASE_URL + '/api/payment-create', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -341,32 +447,8 @@
                         // 跳转到支付宝支付页面
                         console.log('跳转到支付页面:', result.payUrl);
 
-                        // 在新窗口打开支付页面
-                        const payWindow = window.open(result.payUrl, '_blank');
-
-                        if (!payWindow) {
-                            alert('请允许弹出窗口，或点击以下链接完成支付:\n\n' + result.payUrl);
-                        } else {
-                            // 提示用户
-                            document.getElementById('paymentForm').innerHTML = `
-                                <div class="payment-header">
-                                    <h1>⏳ 等待支付</h1>
-                                    <p>已在新窗口打开支付宝页面</p>
-                                </div>
-                                <div class="alipay-notice">
-                                    <p><strong>💡 提示</strong></p>
-                                    <p>• 请在新打开的窗口中完成支付</p>
-                                    <p>• 支付成功后会自动跳转</p>
-                                    <p>• 如未跳转，请点击下方按钮</p>
-                                </div>
-                                <button class="pay-button" onclick="checkPaymentStatus()">查询支付状态</button>
-                                <br><br>
-                                <a href="${result.payUrl}" target="_blank" class="back-button">重新打开支付页面</a>
-                            `;
-
-                            // 每5秒自动查询一次支付状态
-                            setInterval(checkPaymentStatus, 5000);
-                        }
+                        // 直接跳转到支付宝页面（不用新窗口）
+                        window.location.href = result.payUrl;
                     } else {
                         alert('创建支付订单成功，但未收到支付链接');
                     }
@@ -378,8 +460,24 @@
                 console.error('创建支付订单失败:', error);
                 loading.classList.remove('active');
                 payButton.disabled = false;
-                alert('网络错误，请确保支付服务器已启动: ' + error.message);
+                alert('网络错误: ' + error.message);
             }
+        }
+
+        // 演示支付流程
+        function demoPayment() {
+            const loading = document.getElementById('loading');
+            const payButton = document.getElementById('payButton');
+
+            loading.classList.add('active');
+            payButton.disabled = true;
+
+            // 模拟支付过程
+            setTimeout(() => {
+                loading.classList.remove('active');
+                currentOrderId = orderData.orderId;
+                showPaymentSuccess();
+            }, 2000);
         }
 
         // 查询支付状态
@@ -392,7 +490,7 @@
             try {
                 console.log('查询支付状态:', currentOrderId);
 
-                const response = await fetch(API_BASE_URL + '/api/payment/query', {
+                const response = await fetch(API_BASE_URL + '/api/payment-query', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -422,7 +520,8 @@
         // 显示支付成功
         function showPaymentSuccess() {
             document.getElementById('paymentForm').innerHTML = '';
-            document.getElementById('successStatus').classList.add('success');
+            const successStatus = document.getElementById('successStatus');
+            successStatus.classList.add('show');
             document.getElementById('successOrderId').textContent = currentOrderId;
         }
 

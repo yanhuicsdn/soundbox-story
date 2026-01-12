@@ -10,15 +10,9 @@ let karaokeInterval = null;
 
 // 录音文本和时间轴(单位:毫秒) - 按逗号分句
 const recordingText = [
-    { text: '小兔子乖乖，', duration: 2000 },
-    { text: '把门儿开开，', duration: 2000 },
-    { text: '快点儿开开，', duration: 1500 },
-    { text: '我要进来。', duration: 1500 },
-    { text: '不开不开我不开，', duration: 2500 },
-    { text: '妈妈没回来，', duration: 2000 },
-    { text: '谁来也不开。', duration: 2000 },
-    { text: '从前有一座大山，', duration: 2000 },
-    { text: '山里住着一只小熊。', duration: 1500 }
+    { text: '小兔子乖乖，把门儿开开，', duration: 4000 },
+    { text: '快点儿开开，我要进来。', duration: 3000 },
+    { text: '从前有一座大山，山里住着一只小熊。', duration: 3500 }
 ];
 
 // 产品信息

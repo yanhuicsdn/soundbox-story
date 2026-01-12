@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>声宝盒 - 在线支付</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .payment-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .payment-header h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .payment-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .order-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .order-info h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .order-value {
+            color: #333;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .order-value.highlight {
+            color: #e74c3c;
+            font-size: 20px;
+        }
+
+        .payment-methods {
+            margin-bottom: 30px;
+        }
+
+        .payment-methods h3 {
+            color: #333;
+            font-size: 16px;
+            margin-bottom: 15px;
+        }
+
+        .payment-method {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .payment-method:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .payment-method.selected {
+            border-color: #667eea;
+            background: #f0f3ff;
+        }
+
+        .payment-method input {
+            margin-right: 15px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .payment-method label {
+            flex: 1;
+            cursor: pointer;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .payment-icon {
+            width: 30px;
+            height: 30px;
+            margin-right: 10px;
+        }
+
+        .pay-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .pay-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .pay-button:active {
+            transform: translateY(0);
+        }
+
+        .pay-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .payment-status {
+            text-align: center;
+            padding: 30px;
+            display: none;
+        }
+
+        .payment-status.success {
+            display: block;
+        }
+
+        .payment-status.success .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+
+        .payment-status.success h2 {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+
+        .payment-status.success p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .back-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .qrcode-container {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .qrcode-container.active {
+            display: block;
+        }
+
+        .qrcode-container img {
+            max-width: 250px;
+            margin: 20px auto;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            padding: 10px;
+        }
+
+        .qrcode-container p {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .timer {
+            color: #e74c3c;
+            font-weight: 600;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <!-- 支付表单 -->
+        <div id="paymentForm">
+            <div class="payment-header">
+                <h1>💳 在线支付</h1>
+                <p>请选择支付方式完成订单</p>
+            </div>
+
+            <div class="order-info">
+                <h3>📦 订单信息</h3>
+                <div class="order-item">
+                    <span class="order-label">订单号</span>
+                    <span class="order-value" id="orderId">-</span>
+                </div>
+                <div class="order-item">
+                    <span class="order-label">商品名称</span>
+                    <span class="order-value" id="productName">-</span>
+                </div>
+                <div class="order-item">
+                    <span class="order-label">宝宝名字</span>
+                    <span class="order-value" id="childName">-</span>
+                </div>
+                <div class="order-item">
+                    <span class="order-label">声音类型</span>
+                    <span class="order-value" id="voiceType">-</span>
+                </div>
+                <div class="order-item">
+                    <span class="order-label">支付金额</span>
+                    <span class="order-value highlight" id="amount">¥0.00</span>
+                </div>
+            </div>
+
+            <div class="payment-methods">
+                <h3>💰 选择支付方式</h3>
+
+                <div class="payment-method selected" data-method="alipay">
+                    <input type="radio" name="payMethod" value="alipay" checked>
+                    <label>支付宝</label>
+                </div>
+
+                <div class="payment-method" data-method="wechat">
+                    <input type="radio" name="payMethod" value="wechat">
+                    <label>微信支付</label>
+                </div>
+            </div>
+
+            <button class="pay-button" onclick="createPayment()">
+                立即支付
+            </button>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>正在创建支付订单...</p>
+            </div>
+        </div>
+
+        <!-- 二维码支付 -->
+        <div class="qrcode-container" id="qrcodeContainer">
+            <div class="payment-header">
+                <h1>📱 扫码支付</h1>
+            </div>
+            <p>请使用<span id="paymentApp">支付宝</span>扫描二维码完成支付</p>
+            <div id="qrcode"></div>
+            <p>支付金额: <span class="timer" id="qrAmount">¥0.00</span></p>
+            <p>请在 <span class="timer" id="countdown">15:00</span> 内完成支付</p>
+            <button class="pay-button" onclick="checkPaymentStatus()">查询支付状态</button>
+            <br><br>
+            <a href="#" onclick="location.reload()" style="color: #667eea;">返回重新选择</a>
+        </div>
+
+        <!-- 支付成功 -->
+        <div class="payment-status success" id="successStatus">
+            <div class="icon">✅</div>
+            <h2>支付成功！</h2>
+            <p>您的订单已支付成功，我们将尽快为您生成定制语音故事。</p>
+            <p>订单号: <strong id="successOrderId">-</strong></p>
+            <a href="/" class="back-button">返回首页</a>
+        </div>
+    </div>
+
+    <script>
+        // API配置（开发环境）
+        const API_BASE_URL = 'http://localhost:3000';
+
+        // 从URL获取订单信息
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderData = {
+            orderId: urlParams.get('orderId') || 'ORD' + Date.now(),
+            productName: urlParams.get('product') || '哄睡故事包',
+            amount: parseFloat(urlParams.get('amount')) || 79,
+            childName: urlParams.get('childName') || '宝宝',
+            voiceType: urlParams.get('voiceType') || '妈妈',
+            email: urlParams.get('email') || ''
+        };
+
+        let currentPayMethod = 'alipay';
+        let currentOrderId = null;
+        let statusCheckInterval = null;
+        let countdownInterval = null;
+
+        // 初始化页面
+        function init() {
+            document.getElementById('orderId').textContent = orderData.orderId;
+            document.getElementById('productName').textContent = orderData.productName;
+            document.getElementById('childName').textContent = orderData.childName;
+            document.getElementById('voiceType').textContent = orderData.voiceType;
+            document.getElementById('amount').textContent = '¥' + orderData.amount.toFixed(2);
+
+            // 支付方式选择
+            document.querySelectorAll('.payment-method').forEach(method => {
+                method.addEventListener('click', function() {
+                    document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
+                    this.classList.add('selected');
+                    currentPayMethod = this.dataset.method;
+                    this.querySelector('input').checked = true;
+                });
+            });
+        }
+
+        // 创建支付订单
+        async function createPayment() {
+            const loading = document.getElementById('loading');
+            loading.classList.add('active');
+
+            try {
+                const response = await fetch(API_BASE_URL + '/api/payment/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        orderId: orderData.orderId,
+                        productName: orderData.productName,
+                        productDesc: `${orderData.productName} - ${orderData.childName}的定制故事`,
+                        amount: orderData.amount,
+                        childName: orderData.childName,
+                        voiceType: orderData.voiceType,
+                        email: orderData.email,
+                        payType: currentPayMethod
+                    })
+                });
+
+                const result = await response.json();
+
+                loading.classList.remove('active');
+
+                if (result.success) {
+                    currentOrderId = result.orderId;
+
+                    if (result.payUrl) {
+                        // 跳转到支付页面
+                        if (confirm('即将跳转到支付页面，是否继续？')) {
+                            window.location.href = result.payUrl;
+                        }
+                    } else if (result.qrcode) {
+                        // 显示二维码
+                        showQRCode(result.qrcode);
+                    }
+                } else {
+                    alert('创建支付订单失败: ' + result.message);
+                }
+
+            } catch (error) {
+                console.error('创建支付订单失败:', error);
+                loading.classList.remove('active');
+                alert('网络错误，请稍后重试');
+            }
+        }
+
+        // 显示二维码
+        function showQRCode(qrcodeUrl) {
+            document.getElementById('paymentForm').style.display = 'none';
+            const qrContainer = document.getElementById('qrcodeContainer');
+            qrContainer.classList.add('active');
+
+            document.getElementById('paymentApp').textContent = currentPayMethod === 'alipay' ? '支付宝' : '微信';
+            document.getElementById('qrAmount').textContent = '¥' + orderData.amount.toFixed(2);
+
+            // 生成二维码（使用在线API）
+            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrcodeUrl)}`;
+            document.getElementById('qrcode').innerHTML = `<img src="${qrApiUrl}" alt="支付二维码">`;
+
+            // 开始倒计时
+            startCountdown(15 * 60); // 15分钟
+
+            // 定时查询支付状态
+            statusCheckInterval = setInterval(checkPaymentStatus, 5000); // 每5秒查询一次
+        }
+
+        // 倒计时
+        function startCountdown(seconds) {
+            let remaining = seconds;
+
+            function update() {
+                const minutes = Math.floor(remaining / 60);
+                const secs = remaining % 60;
+                document.getElementById('countdown').textContent =
+                    `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    clearInterval(statusCheckInterval);
+                    alert('支付超时，请重新下单');
+                    location.reload();
+                }
+
+                remaining--;
+            }
+
+            update();
+            countdownInterval = setInterval(update, 1000);
+        }
+
+        // 查询支付状态
+        async function checkPaymentStatus() {
+            if (!currentOrderId) return;
+
+            try {
+                const response = await fetch(API_BASE_URL + '/api/payment/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        orderId: currentOrderId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success && result.data) {
+                    if (result.data.pay_status === '1' || result.data.pay_status === 'success') {
+                        // 支付成功
+                        clearInterval(countdownInterval);
+                        clearInterval(statusCheckInterval);
+
+                        showPaymentSuccess();
+                    }
+                }
+
+            } catch (error) {
+                console.error('查询支付状态失败:', error);
+            }
+        }
+
+        // 显示支付成功
+        function showPaymentSuccess() {
+            document.getElementById('paymentForm').style.display = 'none';
+            document.getElementById('qrcodeContainer').classList.remove('active');
+            document.getElementById('successStatus').classList.add('success');
+            document.getElementById('successOrderId').textContent = currentOrderId;
+        }
+
+        // 页面加载时初始化
+        init();
+
+        // 检查URL中是否已有支付结果
+        if (urlParams.get('status') === 'success') {
+            const oid = urlParams.get('orderId');
+            if (oid) {
+                currentOrderId = oid;
+                showPaymentSuccess();
+            }
+        }
+    </script>
+</body>
+</html>

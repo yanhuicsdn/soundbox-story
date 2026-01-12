@@ -163,21 +163,51 @@
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
-        const orderData = {
-            orderId: urlParams.get('out_trade_no') || urlParams.get('orderId') || '-',
-            productName: decodeURIComponent(urlParams.get('product') || '定制语音故事'),
-            childName: decodeURIComponent(urlParams.get('childName') || '-'),
-            voiceType: decodeURIComponent(urlParams.get('voiceType') || '-'),
-            amount: urlParams.get('money') || urlParams.get('amount') || '0'
+        
+        // 从 URL 获取基本信息
+        let orderData = {
+            orderId: urlParams.get('out_trade_no') || '-',
+            productName: decodeURIComponent(urlParams.get('name') || '定制语音故事'),
+            childName: '-',
+            voiceType: '-',
+            amount: urlParams.get('money') || '0'
         };
 
+        // 尝试解析 param 参数获取详细信息
+        const paramStr = urlParams.get('param');
+        if (paramStr) {
+            try {
+                console.log('原始 param:', paramStr);
+                
+                // 处理转义的 param 字符串
+                let cleanParam = paramStr
+                    .replace(/\\&quot;/g, '"')  // 替换 \&quot; 为 "
+                    .replace(/\\"/g, '"')       // 替换 \" 为 "
+                    .replace(/&quot;/g, '"');   // 替换 &quot; 为 "
+                
+                console.log('清理后 param:', cleanParam);
+                
+                const paramData = JSON.parse(cleanParam);
+                console.log('解析后 param:', paramData);
+                
+                // 更新订单数据
+                if (paramData.childName) orderData.childName = paramData.childName;
+                if (paramData.voiceType) orderData.voiceType = paramData.voiceType;
+                if (paramData.productName) orderData.productName = paramData.productName;
+                
+            } catch (e) {
+                console.error('解析 param 失败:', e);
+            }
+        }
+
+        // 更新页面显示
         document.getElementById('orderId').textContent = orderData.orderId;
         document.getElementById('productName').textContent = orderData.productName;
         document.getElementById('childName').textContent = orderData.childName;
         document.getElementById('voiceType').textContent = orderData.voiceType;
         document.getElementById('amount').textContent = '¥' + parseFloat(orderData.amount).toFixed(2);
 
-        console.log('订单信息:', orderData);
+        console.log('最终订单信息:', orderData);
     </script>
 </body>
 </html>

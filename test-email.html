@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邮件发送测试 - 声宝盒</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7F8C8D;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2C3E50;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #E0E0E0;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #FF6B6B;
+        }
+
+        .file-upload {
+            border: 2px dashed #E0E0E0;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .file-upload:hover {
+            border-color: #FF6B6B;
+            background: rgba(255, 107, 107, 0.05);
+        }
+
+        .file-upload.dragover {
+            border-color: #FF6B6B;
+            background: rgba(255, 107, 107, 0.1);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .result.success {
+            background: #D4EDDA;
+            color: #155724;
+            border: 1px solid #C3E6CB;
+        }
+
+        .result.error {
+            background: #F8D7DA;
+            color: #721C24;
+            border: 1px solid #F5C6CB;
+        }
+
+        .recording-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: #F7F9FC;
+            border-radius: 8px;
+        }
+
+        #startRecord, #stopRecord {
+            padding: 12px 20px;
+            margin: 5px;
+            width: auto;
+        }
+
+        .recording-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        #recording-status {
+            text-align: center;
+            font-weight: 600;
+            color: #FF6B6B;
+            min-height: 24px;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 声宝盒邮件发送测试</h1>
+        <p class="subtitle">测试录音文件和订单信息是否能成功发送到邮箱</p>
+
+        <form id="testForm">
+            <!-- 基本信息 -->
+            <div class="form-group">
+                <label for="childName">宝宝名字 *</label>
+                <input type="text" id="childName" required placeholder="例如: 小明">
+            </div>
+
+            <div class="form-group">
+                <label for="voiceType">选择声音 *</label>
+                <select id="voiceType" required>
+                    <option value="">请选择</option>
+                    <option value="爸爸">爸爸的声音</option>
+                    <option value="妈妈">妈妈的声音</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="email">邮箱地址 *</label>
+                <input type="email" id="email" required placeholder="用于接收邮件">
+            </div>
+
+            <div class="form-group">
+                <label for="childAge">孩子年龄</label>
+                <select id="childAge">
+                    <option value="">请选择</option>
+                    <option value="1">1岁</option>
+                    <option value="2">2岁</option>
+                    <option value="3">3岁</option>
+                    <option value="4">4岁</option>
+                    <option value="5">5岁</option>
+                </select>
+            </div>
+
+            <!-- 录音部分 -->
+            <div class="recording-section">
+                <label>测试录音 (可选)</label>
+                <p style="font-size: 14px; color: #7F8C8D; margin-bottom: 10px;">
+                    可以直接录制一段声音,或上传音频文件
+                </p>
+
+                <div class="recording-controls">
+                    <button type="button" id="startRecord">🎙️ 开始录音</button>
+                    <button type="button" id="stopRecord" style="display: none;">⏹️ 停止录音</button>
+                </div>
+
+                <div id="recording-status"></div>
+
+                <audio id="audioPreview" controls style="display: none;"></audio>
+
+                <div style="margin-top: 15px; text-align: center;">
+                    <span style="color: #7F8C8D;">或上传音频文件:</span>
+                    <input type="file" id="audioFile" accept="audio/*" style="margin-top: 10px;">
+                </div>
+            </div>
+
+            <button type="submit" id="submitBtn">📤 发送测试邮件</button>
+        </form>
+
+        <div id="result" class="result"></div>
+    </div>
+
+    <script>
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordedBlob = null;
+
+        // 录音功能
+        document.getElementById('startRecord').addEventListener('click', async function() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = function(event) {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = function() {
+                    recordedBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioUrl = URL.createObjectURL(recordedBlob);
+                    const audioPreview = document.getElementById('audioPreview');
+                    audioPreview.src = audioUrl;
+                    audioPreview.style.display = 'block';
+
+                    document.getElementById('recording-status').textContent = '✅ 录音完成!';
+                    document.getElementById('startRecord').style.display = 'inline-block';
+                    document.getElementById('stopRecord').style.display = 'none';
+                };
+
+                mediaRecorder.start();
+                document.getElementById('recording-status').textContent = '🔴 正在录音...';
+                document.getElementById('startRecord').style.display = 'none';
+                document.getElementById('stopRecord').style.display = 'inline-block';
+
+            } catch (error) {
+                alert('无法访问麦克风: ' + error.message);
+            }
+        });
+
+        document.getElementById('stopRecord').addEventListener('click', function() {
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            }
+        });
+
+        // 表单提交
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            const resultDiv = document.getElementById('result');
+
+            // 获取表单数据
+            const childName = document.getElementById('childName').value;
+            const voiceType = document.getElementById('voiceType').value;
+            const email = document.getElementById('email').value;
+            const childAge = document.getElementById('childAge').value;
+
+            // 确定使用哪个音频文件
+            let audioFile;
+            if (recordedBlob) {
+                audioFile = recordedBlob;
+            } else {
+                const fileInput = document.getElementById('audioFile');
+                if (fileInput.files.length > 0) {
+                    audioFile = fileInput.files[0];
+                }
+            }
+
+            // 准备FormData
+            const formData = new FormData();
+            if (audioFile) {
+                formData.append('audio', audioFile, 'test.wav');
+            }
+            formData.append('childName', childName);
+            formData.append('voiceType', voiceType);
+            formData.append('email', email);
+            formData.append('childAge', childAge || '');
+            formData.append('wechat', '测试微信');
+            formData.append('product', JSON.stringify({
+                name: '测试故事包',
+                price: 0
+            }));
+
+            // 禁用按钮
+            submitBtn.disabled = true;
+            submitBtn.textContent = '发送中...';
+            resultDiv.style.display = 'none';
+
+            try {
+                // 发送到本地服务器
+                const response = await fetch('http://localhost:3000/api/send-recording', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ 邮件发送成功!</strong><br>
+                        消息ID: ${data.messageId}<br>
+                        文件名: ${data.filename}<br><br>
+                        请检查邮箱 <strong>1543827@qq.com</strong> 查收邮件
+                    `;
+                    resultDiv.style.display = 'block';
+                } else {
+                    throw new Error(data.error || '发送失败');
+                }
+
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `
+                    <strong>❌ 发送失败!</strong><br>
+                    错误信息: ${error.message}<br><br>
+                    请确保:<br>
+                    1. 邮件服务已启动 (npm run dev)<br>
+                    2. SMTP配置正确<br>
+                    3. 网络连接正常
+                `;
+                resultDiv.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '📤 发送测试邮件';
+            }
+        });
+
+        // 文件拖拽上传
+        const fileUpload = document.querySelector('.file-upload');
+        const fileInput = document.getElementById('audioFile');
+
+        fileUpload.addEventListener('click', () => fileInput.click());
+
+        fileUpload.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUpload.classList.add('dragover');
+        });
+
+        fileUpload.addEventListener('dragleave', () => {
+            fileUpload.classList.remove('dragover');
+        });
+
+        fileUpload.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUpload.classList.remove('dragover');
+            if (e.data.files.length > 0) {
+                fileInput.files = e.data.files;
+                fileUpload.textContent = '✅ 已选择: ' + e.data.files[0].name;
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileUpload.textContent = '✅ 已选择: ' + fileInput.files[0].name;
+            }
+        });
+    </script>
+</body>
+</html>

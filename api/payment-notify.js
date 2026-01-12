@@ -177,6 +177,15 @@ async function sendConfirmationEmail(orderInfo) {
         return;
     }
 
+    // 尝试加载 nodemailer
+    let nodemailer;
+    try {
+        nodemailer = require('nodemailer');
+    } catch (e) {
+        console.warn('⚠️ nodemailer 模块不可用，无法发送邮件');
+        return;
+    }
+
     // SMTP 配置
     const SMTP_CONFIG = {
         host: process.env.SMTP_HOST || 'smtp.sohu.com',
@@ -190,8 +199,6 @@ async function sendConfirmationEmail(orderInfo) {
         console.error('❌ SMTP 配置不完整，请在 Vercel 环境变量中配置 SMTP_USER 和 SMTP_PASS');
         throw new Error('SMTP 配置不完整');
     }
-
-    const nodemailer = require('nodemailer');
 
     // 创建邮件传输器
     const transporter = nodemailer.createTransport({

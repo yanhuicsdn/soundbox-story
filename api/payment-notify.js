@@ -7,13 +7,13 @@
 const crypto = require('crypto');
 
 const PAY_CONFIG = {
-    merchantId: '2999',
-    md5Key: 'hkd9KnN9ets4NZB7sGtK1s2zt7abhinH'
+    pid: '2999',
+    key: 'hkd9KnN9ets4NZB7sGtK1s2zt7abhinH'
 };
 
-function signParams(params) {
+function signParams(params, key) {
     const filteredParams = Object.keys(params)
-        .filter(key => params[key] !== '' && params[key] !== null && params[key] !== undefined && key !== 'pay_md5sign')
+        .filter(key => params[key] !== '' && params[key] !== null && params[key] !== undefined && key !== 'sign' && key !== 'sign_type')
         .sort()
         .reduce((result, key) => {
             result[key] = params[key];
@@ -22,12 +22,11 @@ function signParams(params) {
 
     const signContent = Object.keys(filteredParams)
         .map(key => `${key}=${filteredParams[key]}`)
-        .join('&') + PAY_CONFIG.md5Key;
+        .join('&') + key;
 
     return crypto.createHash('md5')
         .update(signContent, 'utf8')
-        .digest('hex')
-        .toUpperCase();
+        .digest('hex'); // 小写
 }
 
 export default async function handler(req, res) {
@@ -45,14 +44,14 @@ export default async function handler(req, res) {
         console.log('接收到的参数:', JSON.stringify(params, null, 2));
 
         // 验签
-        const receivedSign = params.pay_md5sign || params.sign;
+        const receivedSign = params.sign;
         if (!receivedSign) {
             console.error('❌ 缺少签名参数');
             return res.send('fail');
         }
 
         // 计算签名
-        const calculatedSign = signParams(params);
+        const calculatedSign = signParams(params, PAY_CONFIG.key);
 
         // 比对签名
         if (calculatedSign !== receivedSign) {
@@ -65,10 +64,10 @@ export default async function handler(req, res) {
         console.log('✅ 验签成功');
 
         // 提取订单信息
-        const outTradeNo = params.pay_orderid || params.orderid;
-        const transactionId = params.pay_transaction_id || params.transaction_id;
-        const amount = params.pay_amount || params.amount;
-        const status = params.pay_status || params.status;
+        const outTradeNo = params.out_trade_no;
+        const transactionId = params.trade_no;
+        const amount = params.money;
+        const status = params.trade_status;
 
         console.log('订单号:', outTradeNo);
         console.log('交易号:', transactionId);
@@ -80,7 +79,7 @@ export default async function handler(req, res) {
         // 2. 发送确认邮件
         // 3. 调用语音克隆服务
 
-        if (status === '1' || status === 'success' || status === 'SUCCESS') {
+        if (status === 'TRADE_SUCCESS') {
             console.log('✅ 订单支付成功！');
 
             // TODO: 处理支付成功后的业务

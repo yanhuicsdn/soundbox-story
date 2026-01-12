@@ -8,19 +8,18 @@ const crypto = require('crypto');
 // PayQixiang 配置
 const PAY_CONFIG = {
     apiUrl: 'https://api.payqixiang.cn/',
-    merchantId: '2999',
-    md5Key: 'hkd9KnN9ets4NZB7sGtK1s2zt7abhinH',
-    payType: 'alipay',
+    pid: '2999',
+    key: 'hkd9KnN9ets4NZB7sGtK1s2zt7abhinH',
     // 异步通知地址 - 需要配置为 Vercel 域名
     notifyUrl: 'https://story.66668888.cloud/api/payment-notify',
     // 同步跳转地址
     returnUrl: 'https://story.66668888.cloud/payment-result'
 };
 
-// MD5 签名函数
-function signParams(params) {
+// MD5 签名函数 - 根据文档,MD5结果为小写
+function signParams(params, key) {
     const filteredParams = Object.keys(params)
-        .filter(key => params[key] !== '' && params[key] !== null && params[key] !== undefined && key !== 'pay_md5sign')
+        .filter(key => params[key] !== '' && params[key] !== null && params[key] !== undefined && key !== 'sign' && key !== 'sign_type')
         .sort()
         .reduce((result, key) => {
             result[key] = params[key];
@@ -29,13 +28,12 @@ function signParams(params) {
 
     const signContent = Object.keys(filteredParams)
         .map(key => `${key}=${filteredParams[key]}`)
-        .join('&') + PAY_CONFIG.md5Key;
+        .join('&') + key;
 
     const sign = crypto
         .createHash('md5')
         .update(signContent, 'utf8')
-        .digest('hex')
-        .toUpperCase();
+        .digest('hex'); // 小写,不转大写
 
     return sign;
 }
@@ -66,34 +64,36 @@ export default async function handler(req, res) {
         console.log('商品名称:', productName);
         console.log('金额:', amount);
 
-        // 构建请求参数
+        // 构建请求参数 - 使用 mapi.php 接口(推荐)
         const params = {
-            pay_memberid: PAY_CONFIG.merchantId,
-            pay_orderid: outTradeNo,
-            pay_amount: amount.toFixed(2),
-            pay_applydate: new Date().toISOString().replace('T', ' ').substring(0, 19),
-            pay_bankcode: PAY_CONFIG.payType,
-            pay_notifyurl: PAY_CONFIG.notifyUrl,
-            pay_callbackurl: PAY_CONFIG.returnUrl,
-            pay_attach: JSON.stringify({
+            pid: PAY_CONFIG.pid,
+            type: 'alipay',
+            out_trade_no: outTradeNo,
+            notify_url: PAY_CONFIG.notifyUrl,
+            return_url: PAY_CONFIG.returnUrl,
+            name: productName,
+            money: amount.toFixed(2),
+            device: 'jump', // 自适应页面
+            param: JSON.stringify({
                 childName,
                 voiceType,
-                email,
-                productName
+                email
             })
         };
 
         // 计算签名
-        params.pay_md5sign = signParams(params);
+        params.sign = signParams(params, PAY_CONFIG.key);
+        params.sign_type = 'MD5';
 
         console.log('📤 发送支付请求到PayQixiang...');
+        console.log('请求参数:', params);
 
-        // 发起支付请求到 PayQixiang
+        // 发起支付请求到 PayQixiang - 使用 mapi.php
         const querystring = Object.keys(params)
             .map(key => `${key}=${encodeURIComponent(params[key])}`)
             .join('&');
 
-        const payResponse = await fetch(PAY_CONFIG.apiUrl + 'submit.php', {
+        const payResponse = await fetch(PAY_CONFIG.apiUrl + 'mapi.php', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded'
@@ -102,36 +102,37 @@ export default async function handler(req, res) {
         });
 
         const responseText = await payResponse.text();
-        console.log('📥 PayQixiang响应:', responseText.substring(0, 200));
+        console.log('📥 PayQixiang响应:', responseText);
 
         // 解析响应
         let result;
         try {
             result = JSON.parse(responseText);
         } catch (e) {
-            // 不是JSON，直接返回跳转URL
-            const payUrl = PAY_CONFIG.apiUrl + 'pay.php?' + querystring;
-
-            return res.json({
-                success: true,
-                orderId: outTradeNo,
-                payUrl: payUrl,
-                message: '订单创建成功，请点击链接支付'
+            console.error('解析响应失败:', e);
+            return res.status(500).json({
+                success: false,
+                message: '支付接口返回格式错误',
+                response: responseText.substring(0, 500)
             });
         }
 
-        if (result && result.status === 1) {
+        // 检查返回结果
+        if (result.code === 1) {
+            // 成功
             res.json({
                 success: true,
                 orderId: outTradeNo,
-                payUrl: result.payurl || result.qrcode || result.url,
+                payUrl: result.payurl,
                 qrCode: result.qrcode,
                 message: '订单创建成功'
             });
         } else {
+            // 失败
+            console.error('创建订单失败:', result);
             res.json({
                 success: false,
-                message: result.msg || result.message || '创建订单失败',
+                message: result.msg || '创建订单失败',
                 error: result
             });
         }

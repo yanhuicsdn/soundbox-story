@@ -3,139 +3,157 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>支付结果 - 声宝盒</title>
+    <title>支付成功 - 声宝盒</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
             padding: 20px;
         }
-
-        .result-container {
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            max-width: 500px;
-            width: 100%;
-            padding: 60px 40px;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+            color: white;
+            padding: 40px 30px;
             text-align: center;
         }
-
-        .icon {
-            font-size: 80px;
-            margin-bottom: 20px;
-        }
-
-        h1 {
+        .icon { font-size: 80px; margin-bottom: 15px; }
+        h1 { font-size: 32px; margin-bottom: 10px; }
+        .subtitle { font-size: 16px; opacity: 0.9; }
+        .content { padding: 30px; }
+        .section { margin-bottom: 30px; }
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
             color: #333;
-            font-size: 32px;
             margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
         }
-
-        p {
-            color: #666;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 10px;
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f5f5;
         }
-
-        .order-info {
+        .info-item:last-child { border-bottom: none; }
+        .label { color: #666; font-size: 14px; }
+        .value { color: #333; font-size: 14px; font-weight: 600; }
+        .highlight { color: #52c41a; font-size: 20px; }
+        .qrcode-section {
             background: #f8f9fa;
             border-radius: 12px;
             padding: 20px;
-            margin: 30px 0;
-            text-align: left;
+            text-align: center;
         }
-
-        .order-info-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #e9ecef;
+        .qrcode-img {
+            width: 200px;
+            height: 200px;
+            margin: 15px auto;
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-
-        .order-info-item:last-child {
-            border-bottom: none;
-        }
-
-        .label {
+        .qrcode-text {
             color: #666;
             font-size: 14px;
+            line-height: 1.6;
+            margin-top: 10px;
         }
-
-        .value {
+        .notice {
+            background: #e6f7ff;
+            border-left: 4px solid #1677FF;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .notice p {
             color: #333;
             font-size: 14px;
-            font-weight: 600;
+            line-height: 1.6;
+            margin: 5px 0;
         }
-
         .back-button {
-            display: inline-block;
-            padding: 15px 40px;
+            display: block;
+            width: 100%;
+            padding: 15px;
             background: #1677FF;
             color: white;
+            text-align: center;
             text-decoration: none;
             border-radius: 12px;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
         }
-
         .back-button:hover {
             background: #0e5fd6;
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(22, 119, 255, 0.3);
-        }
-
-        .loading {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #1677FF;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="result-container">
-        <div class="loading" id="loading">
-            <div class="spinner"></div>
-            <p>正在处理支付结果...</p>
+    <div class="container">
+        <div class="header">
+            <div class="icon">✅</div>
+            <h1>支付成功！</h1>
+            <p class="subtitle">感谢您的购买，我们将尽快为您制作专属故事</p>
         </div>
-
-        <div id="result" style="display: none;">
-            <div class="icon" id="resultIcon">✅</div>
-            <h1 id="resultTitle">支付成功！</h1>
-            <p id="resultMessage">您的订单已支付成功</p>
-
-            <div class="order-info" id="orderInfo">
-                <div class="order-info-item">
+        
+        <div class="content">
+            <div class="section">
+                <div class="section-title">📦 订单信息</div>
+                <div class="info-item">
                     <span class="label">订单号</span>
                     <span class="value" id="orderId">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">商品名称</span>
+                    <span class="value" id="productName">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">宝宝名字</span>
+                    <span class="value" id="childName">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">声音类型</span>
+                    <span class="value" id="voiceType">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">支付金额</span>
+                    <span class="value highlight" id="amount">¥0.00</span>
+                </div>
+            </div>
+
+            <div class="notice">
+                <p><strong>📧 确认邮件已发送</strong></p>
+                <p>• 请查收邮箱获取订单详情</p>
+                <p>• 制作完成后会再次发送邮件通知您</p>
+                <p>• 预计制作时间：24-48小时</p>
+            </div>
+
+            <div class="section">
+                <div class="section-title">💬 添加微信客服</div>
+                <div class="qrcode-section">
+                    <p style="color: #333; font-weight: 600; margin-bottom: 10px;">扫码添加客服微信</p>
+                    <div class="qrcode-img">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Crect width='180' height='180' fill='%23f0f0f0'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='14' fill='%23999'%3E微信二维码%3C/text%3E%3C/svg%3E" alt="微信二维码" style="width: 100%; height: 100%;">
+                    </div>
+                    <div class="qrcode-text">
+                        <p><strong>扫一扫上面的二维码图案，加我为朋友。</strong></p>
+                        <p>添加后发送支付截图，获取最新制作进度</p>
+                        <p style="color: #999; font-size: 12px; margin-top: 10px;">客服微信：岩岩岩 | 北京 东城</p>
+                    </div>
                 </div>
             </div>
 
@@ -144,60 +162,22 @@
     </div>
 
     <script>
-        // 从URL获取参数（支持 PayQixiang 回调参数）
         const urlParams = new URLSearchParams(window.location.search);
-        
-        // PayQixiang 回调参数
-        const tradeStatus = urlParams.get('trade_status');
-        const outTradeNo = urlParams.get('out_trade_no');
-        const tradeNo = urlParams.get('trade_no');
-        const money = urlParams.get('money');
-        
-        // 自定义参数
-        const status = urlParams.get('status');
-        const orderId = urlParams.get('orderId') || outTradeNo;
-        const message = urlParams.get('msg');
+        const orderData = {
+            orderId: urlParams.get('out_trade_no') || urlParams.get('orderId') || '-',
+            productName: decodeURIComponent(urlParams.get('product') || '定制语音故事'),
+            childName: decodeURIComponent(urlParams.get('childName') || '-'),
+            voiceType: decodeURIComponent(urlParams.get('voiceType') || '-'),
+            amount: urlParams.get('money') || urlParams.get('amount') || '0'
+        };
 
-        console.log('支付结果参数:', {
-            tradeStatus,
-            outTradeNo,
-            tradeNo,
-            money,
-            status,
-            orderId
-        });
+        document.getElementById('orderId').textContent = orderData.orderId;
+        document.getElementById('productName').textContent = orderData.productName;
+        document.getElementById('childName').textContent = orderData.childName;
+        document.getElementById('voiceType').textContent = orderData.voiceType;
+        document.getElementById('amount').textContent = '¥' + parseFloat(orderData.amount).toFixed(2);
 
-        // 显示结果
-        function showResult() {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('result').style.display = 'block';
-
-            // 判断支付是否成功
-            const isSuccess = tradeStatus === 'TRADE_SUCCESS' || status === 'success';
-
-            if (isSuccess) {
-                document.getElementById('resultIcon').textContent = '✅';
-                document.getElementById('resultTitle').textContent = '支付成功！';
-                document.getElementById('resultMessage').innerHTML = `
-                    您的订单已支付成功，我们将尽快为您生成定制语音故事。<br>
-                    <strong>📧 确认邮件已发送</strong>，请查收邮箱获取订单详情。<br>
-                    <small style="color: #999;">制作完成后会再次发送邮件通知您</small>
-                `;
-
-                if (orderId) {
-                    document.getElementById('orderId').textContent = orderId;
-                    document.getElementById('orderInfo').style.display = 'block';
-                }
-            } else {
-                document.getElementById('resultIcon').textContent = '❌';
-                document.getElementById('resultTitle').textContent = '支付失败';
-                document.getElementById('resultMessage').textContent = message || '支付过程中出现问题，请重试或联系客服';
-                document.getElementById('orderInfo').style.display = 'none';
-            }
-        }
-
-        // 页面加载完成后显示结果
-        window.addEventListener('load', showResult);
+        console.log('订单信息:', orderData);
     </script>
 </body>
 </html>

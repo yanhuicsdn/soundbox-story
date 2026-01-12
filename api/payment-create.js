@@ -54,7 +54,10 @@ export default async function handler(req, res) {
             amount,
             childName,
             voiceType,
-            email
+            email,
+            audioFileBase64, // 录音文件的 base64 编码
+            audioFileName,   // 录音文件名
+            audioFileMimeType // 录音文件类型
         } = req.body;
 
         // 生成商户订单号
@@ -86,7 +89,11 @@ export default async function handler(req, res) {
             param: JSON.stringify({
                 childName,
                 voiceType,
-                email
+                email,
+                productName,
+                audioFileBase64,
+                audioFileName,
+                audioFileMimeType
             })
         };
 

@@ -91,7 +91,7 @@ export default async function handler(req, res) {
 
             // 保存订单到飞书表格
             try {
-                await saveOrderToFeishu({
+                const orderData = {
                     orderId: outTradeNo,
                     transactionId,
                     amount,
@@ -100,7 +100,24 @@ export default async function handler(req, res) {
                     voiceType: orderDetails.voiceType,
                     email: orderDetails.email,
                     status: '已支付'
-                });
+                };
+
+                // 如果有录音文件，解码并添加到订单数据
+                if (orderDetails.audioFileBase64 && orderDetails.audioFileName) {
+                    try {
+                        const audioBuffer = Buffer.from(orderDetails.audioFileBase64, 'base64');
+                        orderData.audioFile = {
+                            buffer: audioBuffer,
+                            filename: orderDetails.audioFileName,
+                            mimetype: orderDetails.audioFileMimeType || 'audio/webm'
+                        };
+                        console.log('🎙️ 录音文件已解码，大小:', audioBuffer.length, 'bytes');
+                    } catch (decodeError) {
+                        console.error('❌ 解码录音文件失败:', decodeError);
+                    }
+                }
+
+                await saveOrderToFeishu(orderData);
                 console.log('✅ 订单已保存到飞书表格');
             } catch (feishuError) {
                 console.error('❌ 保存到飞书表格失败:', feishuError);

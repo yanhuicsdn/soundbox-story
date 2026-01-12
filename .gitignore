@@ -10,7 +10,16 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Next.js
+.next/
+out/
+build/
+dist/
+
 # PM2
 .pm2/
 logs/
 *.log
+
+# Vercel
+.vercel

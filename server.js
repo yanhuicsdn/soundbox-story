@@ -7,6 +7,9 @@
  * 3. 文件名格式: 宝宝名称_爸爸(或妈妈)_邮箱.wav
  */
 
+// 加载环境变量
+require('dotenv').config();
+
 const express = require('express');
 const nodemailer = require('nodemailer');
 const multer = require('multer');

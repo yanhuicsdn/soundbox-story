@@ -157,6 +157,7 @@ async function saveOrderToFeishu(orderData) {
         const accessToken = await getAccessToken();
         
         // 构建记录数据
+        const now = Date.now(); // 使用时间戳（毫秒）
         const record = {
             fields: {
                 '订单号': orderData.orderId,
@@ -167,8 +168,8 @@ async function saveOrderToFeishu(orderData) {
                 '声音类型': orderData.voiceType || '',
                 '用户邮箱': orderData.email || '',
                 '支付状态': orderData.status || '已支付',
-                '支付时间': new Date().toISOString(),
-                '创建时间': new Date().toISOString()
+                '支付时间': now,
+                '创建时间': now
             }
         };
 

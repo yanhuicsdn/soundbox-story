@@ -23,21 +23,53 @@ const recordingText = [
 
 // 产品信息
 const products = {
+    trial: {
+        name: '体验包',
+        price: 19,
+        duration: '30分钟',
+        description: '精选短篇故事，快速体验AI定制语音'
+    },
+    age1to3: {
+        name: '1-3岁故事包',
+        price: 79,
+        duration: '120分钟',
+        description: '适合幼儿，语言简单，情节重复'
+    },
+    age4to6: {
+        name: '4-6岁故事包',
+        price: 79,
+        duration: '120分钟',
+        description: '适合学龄前儿童，情节丰富有趣'
+    },
+    age6to11: {
+        name: '6-11岁故事包',
+        price: 79,
+        duration: '120分钟',
+        description: '适合学龄儿童，情节复杂有深度'
+    },
     sleep: {
         name: '哄睡故事包',
-        price: 79
+        price: 79,
+        duration: '120分钟',
+        description: '温柔安静，帮助孩子入睡'
     },
     brave: {
         name: '勇敢成长包',
-        price: 79
+        price: 79,
+        duration: '120分钟',
+        description: '培养勇气和探索精神'
     },
     emotion: {
         name: '情绪管理包',
-        price: 79
+        price: 79,
+        duration: '120分钟',
+        description: '帮助孩子理解和管理情绪'
     },
     combo: {
         name: '全能组合包',
-        price: 199
+        price: 199,
+        duration: '360分钟',
+        description: '包含全部三个场景故事包'
     }
 };
 

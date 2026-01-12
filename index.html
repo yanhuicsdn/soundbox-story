@@ -146,21 +146,95 @@
         <div class="container">
             <h2 class="section-title">选择你的故事包</h2>
             <p class="section-subtitle">精心策划的故事场景，满足不同需求</p>
+
+            <!-- 体验包 - 特殊样式 -->
+            <div class="trial-banner">
+                <div class="trial-content">
+                    <h3>🎁 第一次尝试？</h3>
+                    <p>花19元，用30分钟快速体验AI定制语音的魅力</p>
+                    <button class="btn btn-trial" onclick="selectProduct('trial')">
+                        ¥19 立即体验
+                    </button>
+                </div>
+            </div>
+
+            <!-- 年龄段分类 -->
+            <h3 class="product-category-title">按年龄段选择</h3>
             <div class="product-grid">
-                <!-- 哄睡包 -->
+                <!-- 1-3岁 -->
+                <div class="product-card">
+                    <div class="product-icon">👶</div>
+                    <h3 class="product-title">1-3岁故事包</h3>
+                    <p class="product-desc">适合幼儿，语言简单，情节重复</p>
+                    <ul class="product-features">
+                        <li>✓ 语言简单易懂</li>
+                        <li>✓ 围绕日常生活主题</li>
+                        <li>✓ 总时长120分钟</li>
+                        <li>✓ 可永久使用</li>
+                    </ul>
+                    <div class="product-price">
+                        <span class="price-current">¥79</span>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="selectProduct('age1to3')">
+                        立即购买
+                    </button>
+                </div>
+
+                <!-- 4-6岁 -->
                 <div class="product-card featured">
                     <div class="product-badge">最受欢迎</div>
+                    <div class="product-icon">🧒</div>
+                    <h3 class="product-title">4-6岁故事包</h3>
+                    <p class="product-desc">适合学龄前儿童，情节丰富有趣</p>
+                    <ul class="product-features">
+                        <li>✓ 情节生动有趣</li>
+                        <li>✓ 富有教育意义</li>
+                        <li>✓ 总时长120分钟</li>
+                        <li>✓ 可永久使用</li>
+                    </ul>
+                    <div class="product-price">
+                        <span class="price-current">¥79</span>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="selectProduct('age4to6')">
+                        立即购买
+                    </button>
+                </div>
+
+                <!-- 6-11岁 -->
+                <div class="product-card">
+                    <div class="product-icon">👦</div>
+                    <h3 class="product-title">6-11岁故事包</h3>
+                    <p class="product-desc">适合学龄儿童，情节复杂有深度</p>
+                    <ul class="product-features">
+                        <li>✓ 情节复杂有趣</li>
+                        <li>✓ 启发思考能力</li>
+                        <li>✓ 总时长120分钟</li>
+                        <li>✓ 可永久使用</li>
+                    </ul>
+                    <div class="product-price">
+                        <span class="price-current">¥79</span>
+                    </div>
+                    <button class="btn btn-primary btn-block" onclick="selectProduct('age6to11')">
+                        立即购买
+                    </button>
+                </div>
+            </div>
+
+            <!-- 场景分类 -->
+            <h3 class="product-category-title">按使用场景选择</h3>
+            <div class="product-grid">
+                <!-- 哄睡包 -->
+                <div class="product-card">
                     <div class="product-icon">🌙</div>
                     <h3 class="product-title">哄睡故事包</h3>
                     <p class="product-desc">舒缓、温暖，帮助孩子安然入睡</p>
                     <ul class="product-features">
-                        <li>✓ 40个精心挑选的睡前故事</li>
+                        <li>✓ 温柔安静的情节</li>
                         <li>✓ 总时长120分钟</li>
-                        <li>✓ 可永久使用，反复收听</li>
-                        <li>✓ 培养良好睡眠习惯</li>
+                        <li>✓ 可永久使用</li>
+                        <li>✓ 培养睡眠习惯</li>
                     </ul>
                     <div class="product-price">
-                        <span class="price-original">¥99</span>
                         <span class="price-current">¥79</span>
                     </div>
                     <button class="btn btn-primary btn-block" onclick="selectProduct('sleep')">
@@ -174,13 +248,12 @@
                     <h3 class="product-title">勇敢成长包</h3>
                     <p class="product-desc">培养勇气、自信、独立品质</p>
                     <ul class="product-features">
-                        <li>✓ 40个勇敢冒险故事</li>
+                        <li>✓ 冒险挑战主题</li>
                         <li>✓ 总时长120分钟</li>
-                        <li>✓ 可永久使用，反复收听</li>
+                        <li>✓ 可永久使用</li>
                         <li>✓ 培养独立精神</li>
                     </ul>
                     <div class="product-price">
-                        <span class="price-original">¥99</span>
                         <span class="price-current">¥79</span>
                     </div>
                     <button class="btn btn-primary btn-block" onclick="selectProduct('brave')">
@@ -194,13 +267,12 @@
                     <h3 class="product-title">情绪管理包</h3>
                     <p class="product-desc">学会管理情绪，培养情商</p>
                     <ul class="product-features">
-                        <li>✓ 40个情绪教育故事</li>
+                        <li>✓ 情绪教育主题</li>
                         <li>✓ 总时长120分钟</li>
-                        <li>✓ 可永久使用，反复收听</li>
+                        <li>✓ 可永久使用</li>
                         <li>✓ 提升社交能力</li>
                     </ul>
                     <div class="product-price">
-                        <span class="price-original">¥99</span>
                         <span class="price-current">¥79</span>
                     </div>
                     <button class="btn btn-primary btn-block" onclick="selectProduct('emotion')">
@@ -215,13 +287,13 @@
                     <h3 class="product-title">全能组合包</h3>
                     <p class="product-desc">三大场景全覆盖，性价比最高</p>
                     <ul class="product-features">
-                        <li>✓ 120个精选故事</li>
-                        <li>✓ 总时长360分钟(6小时)</li>
-                        <li>✓ 包含所有场景</li>
+                        <li>✓ 包含所有场景包</li>
+                        <li>✓ 总时长360分钟</li>
+                        <li>✓ 可永久使用</li>
                         <li>✓ 适合长期使用</li>
                     </ul>
                     <div class="product-price">
-                        <span class="price-original">¥297</span>
+                        <span class="price-original">¥237</span>
                         <span class="price-current">¥199</span>
                     </div>
                     <button class="btn btn-success btn-block" onclick="selectProduct('combo')">

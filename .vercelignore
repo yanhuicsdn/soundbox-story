@@ -1,0 +1,34 @@
+# Python files
+*.py
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+
+# Node modules (server side)
+node_modules/
+package.json
+package-lock.json
+server.js
+
+# Environment files
+.env
+.env.example
+
+# Test files
+test-email.html
+create-*.js
+analyze-*.js
+*.tar.gz
+
+# Documentation (keep README)
+STORY_*.md
+PRODUCTS_*.md
+TEST_*.md
+DEPLOY_*.md
+AUTO_*.md
+QUICKSTART_*.md
+PROJECT_*.md
+
+# Large data files
+story.json

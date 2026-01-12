@@ -10,9 +10,9 @@ let karaokeInterval = null;
 
 // 录音文本和时间轴(单位:毫秒)
 const recordingText = [
-    { text: '小兔子乖乖，把门儿开开，快点儿开开，我要进来。', duration: 4000 },
-    { text: '不开不开我不开，妈妈没回来，谁来也不开。', duration: 3500 },
-    { text: '从前有一座大山，山里住着一只小熊。', duration: 2500 }
+    { text: '小兔子乖乖，把门儿开开，快点儿开开，我要进来。', duration: 7000 },
+    { text: '不开不开我不开，妈妈没回来，谁来也不开。', duration: 6000 },
+    { text: '从前有一座大山，山里住着一只小熊。', duration: 4000 }
 ];
 
 // 产品信息
@@ -193,7 +193,7 @@ function playRecording() {
 
         karaokeInterval = setInterval(() => {
             const elapsedTime = Date.now() - recordingStartTime;
-            if (elapsedTime >= 10000) { // 10秒后停止
+            if (elapsedTime >= 17000) { // 17秒后停止
                 stopKaraoke();
             }
             updateKaraokeHighlight(elapsedTime);

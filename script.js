@@ -129,7 +129,6 @@ function submitOrder(event) {
     // 收集表单数据
     orderData.childName = document.getElementById('child-name').value;
     orderData.voiceType = document.getElementById('voice-type').value;
-    orderData.childAge = document.getElementById('child-age').value;
     orderData.email = document.getElementById('email').value;
     orderData.wechat = document.getElementById('wechat').value;
 
@@ -330,7 +329,6 @@ async function uploadRecordingAndOrder() {
     formData.append('childName', orderData.childName);
     formData.append('voiceType', orderData.voiceType);
     formData.append('email', orderData.email);
-    formData.append('childAge', orderData.childAge || '');
     formData.append('wechat', orderData.wechat || '');
     formData.append('product', JSON.stringify(orderData.product));
 

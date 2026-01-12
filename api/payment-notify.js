@@ -117,7 +117,7 @@ export default async function handler(req, res) {
     }
 }
 
-// 发送确认邮件
+// 发送确认邮件（使用 SMTP）
 async function sendConfirmationEmail(orderInfo) {
     const { orderId, transactionId, amount, email, childName, voiceType } = orderInfo;
 
@@ -126,11 +126,36 @@ async function sendConfirmationEmail(orderInfo) {
         return;
     }
 
-    // 使用 Resend API 发送邮件
-    const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_123456789';
+    // SMTP 配置
+    const SMTP_CONFIG = {
+        host: process.env.SMTP_HOST || 'smtp.sohu.com',
+        port: parseInt(process.env.SMTP_PORT || '25'),
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+    };
 
-    const emailContent = {
-        from: '声宝盒 <noreply@story.66668888.cloud>',
+    // 检查 SMTP 配置
+    if (!SMTP_CONFIG.user || !SMTP_CONFIG.pass) {
+        console.error('❌ SMTP 配置不完整，请在 Vercel 环境变量中配置 SMTP_USER 和 SMTP_PASS');
+        throw new Error('SMTP 配置不完整');
+    }
+
+    const nodemailer = require('nodemailer');
+
+    // 创建邮件传输器
+    const transporter = nodemailer.createTransport({
+        host: SMTP_CONFIG.host,
+        port: SMTP_CONFIG.port,
+        secure: false, // 端口25不使用SSL
+        auth: {
+            user: SMTP_CONFIG.user,
+            pass: SMTP_CONFIG.pass
+        }
+    });
+
+    // 邮件内容
+    const mailOptions = {
+        from: `"声宝盒" <${SMTP_CONFIG.user}>`,
         to: email,
         subject: `【声宝盒】支付成功 - 订单 ${orderId}`,
         html: `
@@ -149,7 +174,6 @@ async function sendConfirmationEmail(orderInfo) {
                     .label { color: #666; }
                     .value { font-weight: 600; color: #333; }
                     .footer { text-align: center; color: #999; font-size: 14px; margin-top: 30px; }
-                    .button { display: inline-block; background: #1677FF; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
                 </style>
             </head>
             <body>
@@ -202,22 +226,8 @@ async function sendConfirmationEmail(orderInfo) {
         `
     };
 
-    // 发送邮件请求
-    const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${RESEND_API_KEY}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(emailContent)
-    });
-
-    if (!response.ok) {
-        const error = await response.text();
-        throw new Error(`邮件发送失败: ${error}`);
-    }
-
-    const result = await response.json();
-    console.log('邮件发送结果:', result);
+    // 发送邮件
+    const result = await transporter.sendMail(mailOptions);
+    console.log('✅ 邮件发送成功:', result.messageId);
     return result;
 }

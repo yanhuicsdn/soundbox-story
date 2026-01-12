@@ -1,0 +1,16 @@
+{
+  "name": "soundbox-story",
+  "version": "1.0.0",
+  "description": "声宝盒 - 定制语音故事",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "vercel build"
+  },
+  "dependencies": {
+    "nodemailer": "^6.9.7"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

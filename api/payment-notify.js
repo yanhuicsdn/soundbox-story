@@ -132,7 +132,8 @@ export default async function handler(req, res) {
                     amount,
                     email: orderDetails.email,
                     childName: orderDetails.childName,
-                    voiceType: orderDetails.voiceType
+                    voiceType: orderDetails.voiceType,
+                    audioFile: orderData.audioFile // 传递录音文件
                 });
                 console.log('✅ 确认邮件已发送');
             } catch (emailError) {
@@ -155,7 +156,7 @@ export default async function handler(req, res) {
 
 // 发送确认邮件（使用 SMTP）
 async function sendConfirmationEmail(orderInfo) {
-    const { orderId, transactionId, amount, email, childName, voiceType } = orderInfo;
+    const { orderId, transactionId, amount, email, childName, voiceType, audioFile } = orderInfo;
 
     if (!email) {
         console.log('⚠️ 未提供邮箱地址，跳过邮件发送');
@@ -248,6 +249,7 @@ async function sendConfirmationEmail(orderInfo) {
 
                         <p><strong>⏰ 制作时间：</strong>我们将在 24-48 小时内完成语音故事的制作。</p>
                         <p><strong>📧 交付方式：</strong>完成后会发送邮件到此邮箱，包含音频文件下载链接。</p>
+                        ${audioFile ? '<p><strong>🎙️ 录音文件：</strong>您的录音文件已作为附件发送。</p>' : ''}
                         
                         <p style="margin-top: 30px;">如有任何问题，请随时联系我们的客服。</p>
                         
@@ -261,6 +263,16 @@ async function sendConfirmationEmail(orderInfo) {
             </html>
         `
     };
+
+    // 如果有录音文件，添加为附件
+    if (audioFile && audioFile.buffer) {
+        mailOptions.attachments = [{
+            filename: audioFile.filename || 'recording.wav',
+            content: audioFile.buffer,
+            contentType: audioFile.mimetype || 'audio/wav'
+        }];
+        console.log('🎙️ 录音文件已添加为邮件附件');
+    }
 
     // 发送邮件
     const result = await transporter.sendMail(mailOptions);

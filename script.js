@@ -283,29 +283,67 @@ function proceedToPayment() {
 }
 
 // ===== 支付提交 =====
-document.getElementById('submitPayment').addEventListener('click', function() {
+document.getElementById('submitPayment').addEventListener('click', async function() {
     // 禁用按钮,防止重复提交
     this.disabled = true;
-    this.textContent = '跳转中...';
+    this.textContent = '处理中...';
 
-    // 生成订单ID
-    const orderId = 'SB' + Date.now();
+    try {
+        // 生成订单ID
+        const orderId = 'SB' + Date.now();
 
-    // 构建支付页面URL参数
-    const params = new URLSearchParams({
-        orderId: orderId,
-        product: orderData.product.name,
-        amount: orderData.product.price,
-        childName: orderData.childName,
-        voiceType: orderData.voiceType,
-        email: orderData.email
-    });
+        // 将录音文件转为 Base64
+        let audioFileBase64 = null;
+        let audioFileName = null;
+        let audioFileMimeType = null;
 
-    // 跳转到支付页面
-    const payUrl = window.location.origin + '/payment-integration.html?' + params.toString();
+        if (recordedBlob) {
+            console.log('🎙️ 正在处理录音文件...');
+            audioFileName = `recording_${orderId}.wav`;
+            audioFileMimeType = recordedBlob.type || 'audio/wav';
+            
+            // 将 Blob 转为 Base64
+            const reader = new FileReader();
+            audioFileBase64 = await new Promise((resolve, reject) => {
+                reader.onloadend = () => {
+                    const base64 = reader.result.split(',')[1]; // 移除 data:audio/wav;base64, 前缀
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(recordedBlob);
+            });
+            
+            console.log('✅ 录音文件已转换为 Base64，大小:', audioFileBase64.length, '字符');
+            
+            // 保存到 localStorage（用于支付页面获取）
+            localStorage.setItem('audioFileData', JSON.stringify({
+                base64: audioFileBase64,
+                filename: audioFileName,
+                mimetype: audioFileMimeType
+            }));
+        }
 
-    console.log('跳转到支付页面:', payUrl);
-    window.location.href = payUrl;
+        // 构建支付页面URL参数
+        const params = new URLSearchParams({
+            orderId: orderId,
+            product: orderData.product.name,
+            amount: orderData.product.price,
+            childName: orderData.childName,
+            voiceType: orderData.voiceType,
+            email: orderData.email
+        });
+
+        // 跳转到支付页面
+        const payUrl = window.location.origin + '/payment-integration.html?' + params.toString();
+
+        console.log('跳转到支付页面:', payUrl);
+        window.location.href = payUrl;
+    } catch (error) {
+        console.error('❌ 处理录音文件失败:', error);
+        alert('处理录音文件失败，请重试');
+        this.disabled = false;
+        this.textContent = '提交订单';
+    }
 });
 
 async function uploadRecordingAndOrder() {

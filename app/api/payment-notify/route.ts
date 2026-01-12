@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
 
             // 保存订单到飞书表格
             try {
-                const { saveOrderToFeishu } = await import('@/lib/feishu');
+                const { saveOrderToFeishu } = await import('../../../lib/feishu');
                 await saveOrderToFeishu(orderData);
                 console.log('✅ 订单已保存到飞书表格');
             } catch (feishuError) {

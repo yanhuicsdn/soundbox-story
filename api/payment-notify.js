@@ -125,18 +125,31 @@ export default async function handler(req, res) {
                 // 飞书保存失败不影响支付成功的确认
             }
 
-            // 发送确认邮件
+            // 发送确认邮件（可选功能）
             try {
-                await sendConfirmationEmail({
-                    orderId: outTradeNo,
-                    transactionId,
-                    amount,
-                    email: orderDetails.email,
-                    childName: orderDetails.childName,
-                    voiceType: orderDetails.voiceType,
-                    audioFile: orderData.audioFile // 传递录音文件
-                });
-                console.log('✅ 确认邮件已发送');
+                // 检查 nodemailer 是否可用
+                let nodemailer;
+                try {
+                    nodemailer = require('nodemailer');
+                } catch (e) {
+                    console.warn('⚠️ nodemailer 模块不可用，跳过邮件发送');
+                    nodemailer = null;
+                }
+
+                if (nodemailer) {
+                    await sendConfirmationEmail({
+                        orderId: outTradeNo,
+                        transactionId,
+                        amount,
+                        email: orderDetails.email,
+                        childName: orderDetails.childName,
+                        voiceType: orderDetails.voiceType,
+                        audioFile: orderData.audioFile // 传递录音文件
+                    });
+                    console.log('✅ 确认邮件已发送');
+                } else {
+                    console.log('⚠️ 邮件功能暂时不可用，订单已保存到飞书');
+                }
             } catch (emailError) {
                 console.error('❌ 发送邮件失败:', emailError);
                 // 邮件发送失败不影响支付成功的确认

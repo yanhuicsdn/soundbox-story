@@ -99,6 +99,9 @@ function submitOrder(event) {
     document.getElementById('order-form').style.display = 'none';
     document.getElementById('recording-section').style.display = 'block';
 
+    // 初始化卡拉OK文本
+    initKaraokeText();
+
     // 滚动到顶部
     document.querySelector('.modal-content').scrollTop = 0;
 }
@@ -431,7 +434,6 @@ function initKaraokeText() {
 // 更新卡拉OK高亮
 function updateKaraokeHighlight(elapsedTime) {
     const lines = document.querySelectorAll('.karaoke-line');
-    const totalTime = recordingText.reduce((sum, line) => sum + line.duration, 0);
 
     lines.forEach(line => {
         const activateTime = parseFloat(line.dataset.activateTime);
@@ -450,13 +452,6 @@ function updateKaraokeHighlight(elapsedTime) {
             line.classList.remove('active', 'completed');
         }
     });
-
-    // 更新进度条
-    const progress = Math.min((elapsedTime / totalTime) * 100, 100);
-    document.getElementById('karaoke-progress').style.width = progress + '%';
-
-    // 更新计时器
-    document.getElementById('recording-timer').textContent = (elapsedTime / 1000).toFixed(1) + 's';
 }
 
 // 重置卡拉OK状态
@@ -465,8 +460,6 @@ function resetKaraoke() {
     lines.forEach(line => {
         line.classList.remove('active', 'completed');
     });
-    document.getElementById('karaoke-progress').style.width = '0%';
-    document.getElementById('recording-timer').textContent = '0.0s';
 }
 
 // 停止卡拉OK更新

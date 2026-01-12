@@ -8,11 +8,17 @@ let karaokeTimer = null;
 let recordingStartTime = null;
 let karaokeInterval = null;
 
-// 录音文本和时间轴(单位:毫秒)
+// 录音文本和时间轴(单位:毫秒) - 按逗号分句
 const recordingText = [
-    { text: '小兔子乖乖，把门儿开开，快点儿开开，我要进来。', duration: 7000 },
-    { text: '不开不开我不开，妈妈没回来，谁来也不开。', duration: 6000 },
-    { text: '从前有一座大山，山里住着一只小熊。', duration: 4000 }
+    { text: '小兔子乖乖，', duration: 2000 },
+    { text: '把门儿开开，', duration: 2000 },
+    { text: '快点儿开开，', duration: 1500 },
+    { text: '我要进来。', duration: 1500 },
+    { text: '不开不开我不开，', duration: 2500 },
+    { text: '妈妈没回来，', duration: 2000 },
+    { text: '谁来也不开。', duration: 2000 },
+    { text: '从前有一座大山，', duration: 2000 },
+    { text: '山里住着一只小熊。', duration: 1500 }
 ];
 
 // 产品信息
@@ -419,7 +425,7 @@ function initKaraokeText() {
     let currentTime = 0;
 
     recordingText.forEach((line, lineIndex) => {
-        const lineElement = document.createElement('p');
+        const lineElement = document.createElement('span');
         lineElement.className = 'karaoke-line';
         lineElement.textContent = line.text;
         lineElement.dataset.lineIndex = lineIndex;

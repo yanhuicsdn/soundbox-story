@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>声宝盒 - 支付宝支付</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .payment-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+        .payment-header { text-align: center; margin-bottom: 30px; }
+        .payment-header h1 { color: #333; font-size: 28px; margin-bottom: 10px; }
+        .payment-header .alipay-logo { width: 60px; height: 60px; margin-bottom: 15px; }
+        .order-info { background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+        .order-info h3 { color: #333; font-size: 16px; margin-bottom: 15px; }
+        .order-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef; }
+        .order-item:last-child { border-bottom: none; }
+        .order-label { color: #666; font-size: 14px; }
+        .order-value { color: #333; font-size: 14px; font-weight: 600; }
+        .order-value.highlight { color: #1677FF; font-size: 24px; }
+        .notice { background: #e6f7ff; border-left: 4px solid #1677FF; padding: 15px; margin-bottom: 20px; border-radius: 8px; }
+        .notice p { color: #333; font-size: 14px; line-height: 1.6; margin-bottom: 8px; }
+        .notice p:last-child { margin-bottom: 0; }
+        .pay-button {
+            width: 100%;
+            padding: 15px;
+            background: #1677FF;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .pay-button:hover { background: #0e5fd6; transform: translateY(-2px); box-shadow: 0 10px 20px rgba(22, 119, 255, 0.3); }
+        .pay-button:disabled { background: #ccc; cursor: not-allowed; transform: none; }
+        .loading { display: none; text-align: center; padding: 20px; }
+        .loading.active { display: block; }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1677FF;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .payment-status { text-align: center; padding: 30px; display: none; }
+        .payment-status.show { display: block; }
+        .payment-status .icon { font-size: 64px; margin-bottom: 20px; }
+        .payment-status h2 { color: #52c41a; margin-bottom: 10px; }
+        .back-button { display: inline-block; padding: 12px 30px; background: #1677FF; color: white; text-decoration: none; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="payment-container">
+        <div id="paymentForm">
+            <div class="payment-header">
+                <svg class="alipay-logo" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0z" fill="#1677FF"/>
+                    <path d="M280 400h464v80H280z" fill="#fff"/>
+                    <path d="M280 560h320v80H280z" fill="#fff"/>
+                    <path d="M280 280h464v80H280z" fill="#fff"/>
+                </svg>
+                <h1>💳 支付宝支付</h1>
+                <p>安全便捷的支付方式</p>
+            </div>
+            <div class="order-info">
+                <h3>📦 订单信息</h3>
+                <div class="order-item"><span class="order-label">订单号</span><span class="order-value" id="orderId">-</span></div>
+                <div class="order-item"><span class="order-label">商品名称</span><span class="order-value" id="productName">-</span></div>
+                <div class="order-item"><span class="order-label">宝宝名字</span><span class="order-value" id="childName">-</span></div>
+                <div class="order-item"><span class="order-label">声音类型</span><span class="order-value" id="voiceType">-</span></div>
+                <div class="order-item"><span class="order-label">支付金额</span><span class="order-value highlight" id="amount">¥0.00</span></div>
+            </div>
+            <div class="notice">
+                <p><strong>🔒 支付说明</strong></p>
+                <p>• 点击下方按钮将跳转到支付宝收银台</p>
+                <p>• 请在支付宝页面完成支付</p>
+                <p>• 支付成功后会自动返回本页面</p>
+            </div>
+            <button class="pay-button" id="payButton" onclick="createPayment()">前往支付宝支付</button>
+            <div class="loading" id="loading"><div class="spinner"></div><p>正在处理...</p></div>
+        </div>
+        <div class="payment-status" id="successStatus">
+            <div class="icon">✅</div>
+            <h2>支付成功!</h2>
+            <p>您的订单已支付成功,我们将尽快为您制作定制故事。</p>
+            <p>订单号: <strong id="successOrderId">-</strong></p>
+            <a href="/" class="back-button">返回首页</a>
+        </div>
+    </div>
+    <script>
+        const API_BASE_URL = window.location.origin;
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderData = {
+            orderId: urlParams.get('orderId') || 'ORD' + Date.now(),
+            productName: urlParams.get('product') || '哄睡故事包',
+            amount: parseFloat(urlParams.get('amount')) || 79,
+            childName: urlParams.get('childName') || '宝宝',
+            voiceType: urlParams.get('voiceType') || '妈妈',
+            email: urlParams.get('email') || ''
+        };
+        let currentOrderId = null;
+        function init() {
+            document.getElementById('orderId').textContent = orderData.orderId;
+            document.getElementById('productName').textContent = orderData.productName;
+            document.getElementById('childName').textContent = orderData.childName;
+            document.getElementById('voiceType').textContent = orderData.voiceType;
+            document.getElementById('amount').textContent = '¥' + orderData.amount.toFixed(2);
+            console.log('订单数据:', orderData);
+        }
+        async function createPayment() {
+            const loading = document.getElementById('loading');
+            const payButton = document.getElementById('payButton');
+            loading.classList.add('active');
+            payButton.disabled = true;
+            try {
+                console.log('创建支付订单...');
+                const response = await fetch(API_BASE_URL + '/api/payment-create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        orderId: orderData.orderId,
+                        productName: orderData.productName,
+                        productDesc: orderData.productName + ' - ' + orderData.childName + '的定制故事',
+                        amount: orderData.amount,
+                        childName: orderData.childName,
+                        voiceType: orderData.voiceType,
+                        email: orderData.email
+                    })
+                });
+                const result = await response.json();
+                console.log('支付接口响应:', result);
+                loading.classList.remove('active');
+                payButton.disabled = false;
+                if (result.success) {
+                    currentOrderId = result.orderId;
+                    if (result.payUrl) {
+                        console.log('跳转到支付页面:', result.payUrl);
+                        window.location.href = result.payUrl;
+                    } else {
+                        alert('创建支付订单成功，但未收到支付链接');
+                    }
+                } else {
+                    alert('创建支付订单失败: ' + result.message);
+                }
+            } catch (error) {
+                console.error('创建支付订单失败:', error);
+                loading.classList.remove('active');
+                payButton.disabled = false;
+                alert('网络错误: ' + error.message);
+            }
+        }
+        function showPaymentSuccess() {
+            document.getElementById('paymentForm').style.display = 'none';
+            document.getElementById('successStatus').classList.add('show');
+            document.getElementById('successOrderId').textContent = currentOrderId;
+        }
+        init();
+        if (urlParams.get('status') === 'success') {
+            const oid = urlParams.get('orderId');
+            if (oid) { currentOrderId = oid; showPaymentSuccess(); }
+        }
+    </script>
+</body>
+</html>

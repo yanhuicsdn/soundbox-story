@@ -19,8 +19,8 @@ const recordingText = [
 const products = {
     trial: {
         name: '体验包',
-        price: 19,
-        duration: '30分钟',
+        price: 9.9,
+        duration: '15分钟',
         description: '精选短篇故事，快速体验AI定制语音'
     },
     age1to3: {

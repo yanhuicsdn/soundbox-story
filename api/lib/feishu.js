@@ -5,12 +5,12 @@
 
 // 飞书配置
 const FEISHU_CONFIG = {
-    appId: process.env.FEISHU_APP_ID || 'cli_a834914dcf6c500d',
-    appSecret: process.env.FEISHU_APP_SECRET || 'LLweMTeb33fFvJ4pDec9LhHfEtswX1L1',
+    appId: process.env.FEISHU_APP_ID,
+    appSecret: process.env.FEISHU_APP_SECRET,
     baseUrl: process.env.FEISHU_BASE_URL || 'https://open.feishu.cn/open-apis',
-    // 多维表格信息
-    baseToken: 'BwfBbSdPmaXjuls14RZcA22znUY',
-    tableId: 'tblU7uysGphfPxab'
+    // 多维表格信息（从环境变量读取，不在代码中硬编码）
+    baseToken: process.env.FEISHU_BASE_TOKEN,
+    tableId: process.env.FEISHU_TABLE_ID
 };
 
 /**

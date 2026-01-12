@@ -31,6 +31,15 @@
 | `FEISHU_APP_ID` | `cli_a834914dcf6c500d` | 飞书应用 ID |
 | `FEISHU_APP_SECRET` | `LLweMTeb33fFvJ4pDec9LhHfEtswX1L1` | 飞书应用密钥 |
 | `FEISHU_BASE_URL` | `https://open.feishu.cn/open-apis` | 飞书 API 基础地址 |
+| `FEISHU_BASE_TOKEN` | `BwfBbSdPmaXjuls14RZcA22znUY` | 飞书多维表格 Base Token |
+| `FEISHU_TABLE_ID` | `tblU7uysGphfPxab` | 飞书表格 ID |
+
+**提取方法：** 从飞书表格 URL 中提取
+```
+https://wcntwr2lxgsq.feishu.cn/base/{BASE_TOKEN}?table={TABLE_ID}
+                                      ↑                    ↑
+                              FEISHU_BASE_TOKEN    FEISHU_TABLE_ID
+```
 
 ### 重要说明
 

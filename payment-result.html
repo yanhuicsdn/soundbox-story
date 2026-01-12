@@ -144,21 +144,45 @@
     </div>
 
     <script>
-        // 从URL获取参数
+        // 从URL获取参数（支持 PayQixiang 回调参数）
         const urlParams = new URLSearchParams(window.location.search);
+        
+        // PayQixiang 回调参数
+        const tradeStatus = urlParams.get('trade_status');
+        const outTradeNo = urlParams.get('out_trade_no');
+        const tradeNo = urlParams.get('trade_no');
+        const money = urlParams.get('money');
+        
+        // 自定义参数
         const status = urlParams.get('status');
-        const orderId = urlParams.get('orderId');
+        const orderId = urlParams.get('orderId') || outTradeNo;
         const message = urlParams.get('msg');
+
+        console.log('支付结果参数:', {
+            tradeStatus,
+            outTradeNo,
+            tradeNo,
+            money,
+            status,
+            orderId
+        });
 
         // 显示结果
         function showResult() {
             document.getElementById('loading').style.display = 'none';
             document.getElementById('result').style.display = 'block';
 
-            if (status === 'success') {
+            // 判断支付是否成功
+            const isSuccess = tradeStatus === 'TRADE_SUCCESS' || status === 'success';
+
+            if (isSuccess) {
                 document.getElementById('resultIcon').textContent = '✅';
                 document.getElementById('resultTitle').textContent = '支付成功！';
-                document.getElementById('resultMessage').textContent = '您的订单已支付成功，我们将尽快为您生成定制语音故事。';
+                document.getElementById('resultMessage').innerHTML = `
+                    您的订单已支付成功，我们将尽快为您生成定制语音故事。<br>
+                    <strong>📧 确认邮件已发送</strong>，请查收邮箱获取订单详情。<br>
+                    <small style="color: #999;">制作完成后会再次发送邮件通知您</small>
+                `;
 
                 if (orderId) {
                     document.getElementById('orderId').textContent = orderId;

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>声宝盒 - 在线支付</title>
+    <title>声宝盒 - 支付宝支付</title>
     <style>
         * {
             margin: 0;
@@ -41,9 +41,10 @@
             margin-bottom: 10px;
         }
 
-        .payment-header p {
-            color: #666;
-            font-size: 14px;
+        .payment-header .alipay-logo {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 15px;
         }
 
         .order-info {
@@ -82,77 +83,41 @@
         }
 
         .order-value.highlight {
-            color: #e74c3c;
-            font-size: 20px;
+            color: #1677FF;
+            font-size: 24px;
         }
 
-        .payment-methods {
-            margin-bottom: 30px;
-        }
-
-        .payment-methods h3 {
-            color: #333;
-            font-size: 16px;
-            margin-bottom: 15px;
-        }
-
-        .payment-method {
-            display: flex;
-            align-items: center;
+        .alipay-notice {
+            background: #e6f7ff;
+            border-left: 4px solid #1677FF;
             padding: 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            border-radius: 8px;
         }
 
-        .payment-method:hover {
-            border-color: #667eea;
-            background: #f8f9ff;
-        }
-
-        .payment-method.selected {
-            border-color: #667eea;
-            background: #f0f3ff;
-        }
-
-        .payment-method input {
-            margin-right: 15px;
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-
-        .payment-method label {
-            flex: 1;
-            cursor: pointer;
-            font-size: 16px;
+        .alipay-notice p {
             color: #333;
-        }
-
-        .payment-icon {
-            width: 30px;
-            height: 30px;
-            margin-right: 10px;
+            font-size: 14px;
+            line-height: 1.6;
         }
 
         .pay-button {
             width: 100%;
             padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1677FF;
             color: white;
             border: none;
             border-radius: 12px;
             font-size: 18px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s ease;
+            transition: all 0.3s ease;
         }
 
         .pay-button:hover {
+            background: #0e5fd6;
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 20px rgba(22, 119, 255, 0.3);
         }
 
         .pay-button:active {
@@ -181,7 +146,7 @@
         }
 
         .payment-status.success h2 {
-            color: #27ae60;
+            color: #52c41a;
             margin-bottom: 10px;
         }
 
@@ -193,7 +158,7 @@
         .back-button {
             display: inline-block;
             padding: 12px 30px;
-            background: #667eea;
+            background: #1677FF;
             color: white;
             text-decoration: none;
             border-radius: 8px;
@@ -212,7 +177,7 @@
 
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border-top: 3px solid #1677FF;
             border-radius: 50%;
             width: 40px;
             height: 40px;
@@ -225,34 +190,14 @@
             100% { transform: rotate(360deg); }
         }
 
-        .qrcode-container {
-            text-align: center;
-            padding: 20px;
-            display: none;
-        }
-
-        .qrcode-container.active {
-            display: block;
-        }
-
-        .qrcode-container img {
-            max-width: 250px;
-            margin: 20px auto;
-            border: 2px solid #e9ecef;
-            border-radius: 12px;
-            padding: 10px;
-        }
-
-        .qrcode-container p {
-            color: #666;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .timer {
-            color: #e74c3c;
-            font-weight: 600;
-            font-size: 18px;
+        .alipay-badge {
+            display: inline-block;
+            background: #1677FF;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 10px;
         }
     </style>
 </head>
@@ -261,8 +206,15 @@
         <!-- 支付表单 -->
         <div id="paymentForm">
             <div class="payment-header">
-                <h1>💳 在线支付</h1>
-                <p>请选择支付方式完成订单</p>
+                <!-- 支付宝Logo -->
+                <svg class="alipay-logo" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M512 0C229.2 0 0 229.2 0 512s229.2 512 512 512 512-229.2 512-512S794.8 0 512 0z" fill="#1677FF"/>
+                    <path d="M280 400h464v80H280z" fill="#fff"/>
+                    <path d="M280 560h320v80H280z" fill="#fff"/>
+                    <path d="M280 280h464v80H280z" fill="#fff"/>
+                </svg>
+                <h1>💳 支付宝支付</h1>
+                <p>安全便捷的支付方式</p>
             </div>
 
             <div class="order-info">
@@ -289,42 +241,21 @@
                 </div>
             </div>
 
-            <div class="payment-methods">
-                <h3>💰 选择支付方式</h3>
-
-                <div class="payment-method selected" data-method="alipay">
-                    <input type="radio" name="payMethod" value="alipay" checked>
-                    <label>支付宝</label>
-                </div>
-
-                <div class="payment-method" data-method="wechat">
-                    <input type="radio" name="payMethod" value="wechat">
-                    <label>微信支付</label>
-                </div>
+            <div class="alipay-notice">
+                <p><strong>🔒 支付说明</strong></p>
+                <p>• 点击下方按钮将跳转到支付宝收银台</p>
+                <p>• 请在支付宝页面完成支付</p>
+                <p>• 支付成功后会自动返回本页面</p>
             </div>
 
-            <button class="pay-button" onclick="createPayment()">
-                立即支付
+            <button class="pay-button" id="payButton" onclick="createPayment()">
+                前往支付宝支付
             </button>
 
             <div class="loading" id="loading">
                 <div class="spinner"></div>
                 <p>正在创建支付订单...</p>
             </div>
-        </div>
-
-        <!-- 二维码支付 -->
-        <div class="qrcode-container" id="qrcodeContainer">
-            <div class="payment-header">
-                <h1>📱 扫码支付</h1>
-            </div>
-            <p>请使用<span id="paymentApp">支付宝</span>扫描二维码完成支付</p>
-            <div id="qrcode"></div>
-            <p>支付金额: <span class="timer" id="qrAmount">¥0.00</span></p>
-            <p>请在 <span class="timer" id="countdown">15:00</span> 内完成支付</p>
-            <button class="pay-button" onclick="checkPaymentStatus()">查询支付状态</button>
-            <br><br>
-            <a href="#" onclick="location.reload()" style="color: #667eea;">返回重新选择</a>
         </div>
 
         <!-- 支付成功 -->
@@ -338,8 +269,8 @@
     </div>
 
     <script>
-        // API配置（开发环境）
-        const API_BASE_URL = 'http://localhost:3000';
+        // API配置
+        const API_BASE_URL = window.location.protocol + '//' + window.location.hostname + ':3000';
 
         // 从URL获取订单信息
         const urlParams = new URLSearchParams(window.location.search);
@@ -352,10 +283,7 @@
             email: urlParams.get('email') || ''
         };
 
-        let currentPayMethod = 'alipay';
         let currentOrderId = null;
-        let statusCheckInterval = null;
-        let countdownInterval = null;
 
         // 初始化页面
         function init() {
@@ -365,23 +293,21 @@
             document.getElementById('voiceType').textContent = orderData.voiceType;
             document.getElementById('amount').textContent = '¥' + orderData.amount.toFixed(2);
 
-            // 支付方式选择
-            document.querySelectorAll('.payment-method').forEach(method => {
-                method.addEventListener('click', function() {
-                    document.querySelectorAll('.payment-method').forEach(m => m.classList.remove('selected'));
-                    this.classList.add('selected');
-                    currentPayMethod = this.dataset.method;
-                    this.querySelector('input').checked = true;
-                });
-            });
+            console.log('订单数据:', orderData);
         }
 
         // 创建支付订单
         async function createPayment() {
             const loading = document.getElementById('loading');
+            const payButton = document.getElementById('payButton');
+
             loading.classList.add('active');
+            payButton.disabled = true;
 
             try {
+                console.log('创建支付订单...');
+                console.log('API地址:', API_BASE_URL + '/api/payment/create');
+
                 const response = await fetch(API_BASE_URL + '/api/payment/create', {
                     method: 'POST',
                     headers: {
@@ -394,26 +320,52 @@
                         amount: orderData.amount,
                         childName: orderData.childName,
                         voiceType: orderData.voiceType,
-                        email: orderData.email,
-                        payType: currentPayMethod
+                        email: orderData.email
                     })
                 });
 
                 const result = await response.json();
 
+                console.log('支付接口响应:', result);
+
                 loading.classList.remove('active');
+                payButton.disabled = false;
 
                 if (result.success) {
                     currentOrderId = result.orderId;
 
                     if (result.payUrl) {
-                        // 跳转到支付页面
-                        if (confirm('即将跳转到支付页面，是否继续？')) {
-                            window.location.href = result.payUrl;
+                        // 跳转到支付宝支付页面
+                        console.log('跳转到支付页面:', result.payUrl);
+
+                        // 在新窗口打开支付页面
+                        const payWindow = window.open(result.payUrl, '_blank');
+
+                        if (!payWindow) {
+                            alert('请允许弹出窗口，或点击以下链接完成支付:\n\n' + result.payUrl);
+                        } else {
+                            // 提示用户
+                            document.getElementById('paymentForm').innerHTML = `
+                                <div class="payment-header">
+                                    <h1>⏳ 等待支付</h1>
+                                    <p>已在新窗口打开支付宝页面</p>
+                                </div>
+                                <div class="alipay-notice">
+                                    <p><strong>💡 提示</strong></p>
+                                    <p>• 请在新打开的窗口中完成支付</p>
+                                    <p>• 支付成功后会自动跳转</p>
+                                    <p>• 如未跳转，请点击下方按钮</p>
+                                </div>
+                                <button class="pay-button" onclick="checkPaymentStatus()">查询支付状态</button>
+                                <br><br>
+                                <a href="${result.payUrl}" target="_blank" class="back-button">重新打开支付页面</a>
+                            `;
+
+                            // 每5秒自动查询一次支付状态
+                            setInterval(checkPaymentStatus, 5000);
                         }
-                    } else if (result.qrcode) {
-                        // 显示二维码
-                        showQRCode(result.qrcode);
+                    } else {
+                        alert('创建支付订单成功，但未收到支付链接');
                     }
                 } else {
                     alert('创建支付订单失败: ' + result.message);
@@ -422,59 +374,21 @@
             } catch (error) {
                 console.error('创建支付订单失败:', error);
                 loading.classList.remove('active');
-                alert('网络错误，请稍后重试');
+                payButton.disabled = false;
+                alert('网络错误，请确保支付服务器已启动: ' + error.message);
             }
-        }
-
-        // 显示二维码
-        function showQRCode(qrcodeUrl) {
-            document.getElementById('paymentForm').style.display = 'none';
-            const qrContainer = document.getElementById('qrcodeContainer');
-            qrContainer.classList.add('active');
-
-            document.getElementById('paymentApp').textContent = currentPayMethod === 'alipay' ? '支付宝' : '微信';
-            document.getElementById('qrAmount').textContent = '¥' + orderData.amount.toFixed(2);
-
-            // 生成二维码（使用在线API）
-            const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrcodeUrl)}`;
-            document.getElementById('qrcode').innerHTML = `<img src="${qrApiUrl}" alt="支付二维码">`;
-
-            // 开始倒计时
-            startCountdown(15 * 60); // 15分钟
-
-            // 定时查询支付状态
-            statusCheckInterval = setInterval(checkPaymentStatus, 5000); // 每5秒查询一次
-        }
-
-        // 倒计时
-        function startCountdown(seconds) {
-            let remaining = seconds;
-
-            function update() {
-                const minutes = Math.floor(remaining / 60);
-                const secs = remaining % 60;
-                document.getElementById('countdown').textContent =
-                    `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-
-                if (remaining <= 0) {
-                    clearInterval(countdownInterval);
-                    clearInterval(statusCheckInterval);
-                    alert('支付超时，请重新下单');
-                    location.reload();
-                }
-
-                remaining--;
-            }
-
-            update();
-            countdownInterval = setInterval(update, 1000);
         }
 
         // 查询支付状态
         async function checkPaymentStatus() {
-            if (!currentOrderId) return;
+            if (!currentOrderId) {
+                console.log('没有订单号，跳过查询');
+                return;
+            }
 
             try {
+                console.log('查询支付状态:', currentOrderId);
+
                 const response = await fetch(API_BASE_URL + '/api/payment/query', {
                     method: 'POST',
                     headers: {
@@ -487,12 +401,12 @@
 
                 const result = await response.json();
 
+                console.log('查询结果:', result);
+
                 if (result.success && result.data) {
                     if (result.data.pay_status === '1' || result.data.pay_status === 'success') {
                         // 支付成功
-                        clearInterval(countdownInterval);
-                        clearInterval(statusCheckInterval);
-
+                        console.log('✅ 支付成功！');
                         showPaymentSuccess();
                     }
                 }
@@ -504,8 +418,7 @@
 
         // 显示支付成功
         function showPaymentSuccess() {
-            document.getElementById('paymentForm').style.display = 'none';
-            document.getElementById('qrcodeContainer').classList.remove('active');
+            document.getElementById('paymentForm').innerHTML = '';
             document.getElementById('successStatus').classList.add('success');
             document.getElementById('successOrderId').textContent = currentOrderId;
         }

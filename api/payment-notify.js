@@ -5,6 +5,7 @@
  */
 
 const crypto = require('crypto');
+const { saveOrderToFeishu } = require('./lib/feishu');
 
 const PAY_CONFIG = {
     pid: '2999',
@@ -86,6 +87,24 @@ export default async function handler(req, res) {
                 } catch (e) {
                     console.error('解析附加数据失败:', e);
                 }
+            }
+
+            // 保存订单到飞书表格
+            try {
+                await saveOrderToFeishu({
+                    orderId: outTradeNo,
+                    transactionId,
+                    amount,
+                    productName: orderDetails.productName,
+                    childName: orderDetails.childName,
+                    voiceType: orderDetails.voiceType,
+                    email: orderDetails.email,
+                    status: '已支付'
+                });
+                console.log('✅ 订单已保存到飞书表格');
+            } catch (feishuError) {
+                console.error('❌ 保存到飞书表格失败:', feishuError);
+                // 飞书保存失败不影响支付成功的确认
             }
 
             // 发送确认邮件

@@ -426,11 +426,17 @@
 
             <div id="recording-section" style="display: none;">
                 <h2>录制您的声音</h2>
-                <p class="recording-instruction">请按照以下文本朗读，大约需要10秒：</p>
-                <div class="recording-text">
-                    <p>小兔子乖乖，把门儿开开，快点儿开开，我要进来。</p>
-                    <p>不开不开我不开，妈妈没回来，谁来也不开。</p>
-                    <p>从前有一座大山，山里住着一只小熊。</p>
+                <p class="recording-instruction">请按照以下文本朗读，跟着彩色字的速度读，大约需要10秒：</p>
+                <div class="karaoke-progress">
+                    <div class="progress-bar">
+                        <div id="karaoke-progress" class="progress-fill"></div>
+                    </div>
+                    <div class="progress-text">
+                        <span id="recording-timer">0.0s</span> / 10.0s
+                    </div>
+                </div>
+                <div class="recording-text karaoke-text" id="karaoke-text">
+                    <!-- 文字将通过JavaScript动态生成 -->
                 </div>
 
                 <div class="recording-controls">
@@ -448,7 +454,7 @@
                     <h4>录音小贴士：</h4>
                     <ul>
                         <li>请在安静的环境下录音</li>
-                        <li>保持正常说话速度，不要太快或太慢</li>
+                        <li>跟随彩色文字的速度朗读</li>
                         <li>用自然的语气，像平时说话一样</li>
                         <li>保持与麦克风的距离（约15-20厘米）</li>
                     </ul>

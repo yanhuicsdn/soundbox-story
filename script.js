@@ -4,6 +4,16 @@ let recordedBlob = null;
 let mediaRecorder = null;
 let audioChunks = [];
 let orderData = {};
+let karaokeTimer = null;
+let recordingStartTime = null;
+let karaokeInterval = null;
+
+// 录音文本和时间轴(单位:毫秒)
+const recordingText = [
+    { text: '小兔子乖乖，把门儿开开，快点儿开开，我要进来。', duration: 4000 },
+    { text: '不开不开我不开，妈妈没回来，谁来也不开。', duration: 3500 },
+    { text: '从前有一座大山，山里住着一只小熊。', duration: 2500 }
+];
 
 // 产品信息
 const products = {
@@ -126,6 +136,9 @@ async function startRecording() {
             const audioUrl = URL.createObjectURL(recordedBlob);
             audioPreview.src = audioUrl;
 
+            // 停止卡拉OK更新
+            stopKaraoke();
+
             // 显示试听和确认按钮
             playRecordBtn.style.display = 'inline-block';
             confirmRecordingBtn.style.display = 'inline-block';
@@ -133,8 +146,15 @@ async function startRecording() {
 
         // 开始录音
         mediaRecorder.start();
+        recordingStartTime = Date.now();
         recordingStatus.textContent = '🔴 正在录音...';
         recordingStatus.classList.add('recording');
+
+        // 启动卡拉OK高亮更新
+        karaokeInterval = setInterval(() => {
+            const elapsedTime = Date.now() - recordingStartTime;
+            updateKaraokeHighlight(elapsedTime);
+        }, 50); // 每50毫秒更新一次
 
         // 更新按钮显示
         startRecordBtn.style.display = 'none';
@@ -163,16 +183,41 @@ function stopRecording() {
 function playRecording() {
     if (audioPreview.src) {
         audioPreview.style.display = 'block';
+
+        // 重置卡拉OK状态
+        resetKaraoke();
+
+        // 播放时也启动卡拉OK更新
         audioPreview.play();
+        recordingStartTime = Date.now();
+
+        karaokeInterval = setInterval(() => {
+            const elapsedTime = Date.now() - recordingStartTime;
+            if (elapsedTime >= 10000) { // 10秒后停止
+                stopKaraoke();
+            }
+            updateKaraokeHighlight(elapsedTime);
+        }, 50);
+
+        // 播放结束时停止更新
+        audioPreview.onended = () => {
+            stopKaraoke();
+        };
     }
 }
 
 function reRecord() {
+    // 停止卡拉OK
+    stopKaraoke();
+
     // 重置录音状态
     recordedBlob = null;
     audioChunks = [];
     audioPreview.src = '';
     audioPreview.style.display = 'none';
+
+    // 重置卡拉OK状态
+    resetKaraoke();
 
     // 重置按钮
     startRecordBtn.style.display = 'inline-block';
@@ -305,6 +350,9 @@ window.addEventListener('scroll', () => {
 
 // ===== 页面加载动画 =====
 document.addEventListener('DOMContentLoaded', function() {
+    // 初始化卡拉OK文本
+    initKaraokeText();
+
     // 添加淡入动画
     const observerOptions = {
         threshold: 0.1,
@@ -357,3 +405,90 @@ console.log('浏览器支持:', {
     mediaRecorder: !!window.MediaRecorder,
     webSocket: !!window.WebSocket
 });
+// ===== 卡拉OK功能 =====
+
+// 初始化卡拉OK文本
+function initKaraokeText() {
+    const container = document.getElementById('karaoke-text');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    let currentLineElement = null;
+    let currentTime = 0;
+    
+    recordingText.forEach((line, lineIndex) => {
+        currentLineElement = document.createElement('div');
+        currentLineElement.className = 'line';
+        
+        const chars = line.text.split('');
+        const timePerChar = line.duration / chars.length;
+        
+        chars.forEach((char, charIndex) => {
+            const span = document.createElement('span');
+            span.className = 'char';
+            span.textContent = char;
+            span.dataset.lineIndex = lineIndex;
+            span.dataset.charIndex = charIndex;
+            span.dataset.activateTime = currentTime;
+            span.dataset.duration = timePerChar;
+            
+            // 标点符号处理
+            if (/[，。！？、：；“”\s]/.test(char)) {
+                span.classList.add('punctuation');
+            }
+            
+            currentLineElement.appendChild(span);
+            currentTime += timePerChar;
+        });
+        
+        container.appendChild(currentLineElement);
+    });
+}
+
+// 更新卡拉OK高亮
+function updateKaraokeHighlight(elapsedTime) {
+    const chars = document.querySelectorAll('.karaoke-text .char');
+    const totalTime = recordingText.reduce((sum, line) => sum + line.duration, 0);
+    
+    chars.forEach(char => {
+        const activateTime = parseFloat(char.dataset.activateTime);
+        
+        if (elapsedTime >= activateTime) {
+            char.classList.remove('active');
+            char.classList.add('completed');
+        } else {
+            // 找到当前应该高亮的字符
+            const prevChar = char.previousElementSibling;
+            if (prevChar && prevChar.classList.contains('completed')) {
+                char.classList.add('active');
+            } else if (!prevChar && elapsedTime >= 0) {
+                char.classList.add('active');
+            }
+        }
+    });
+    
+    // 更新进度条
+    const progress = Math.min((elapsedTime / totalTime) * 100, 100);
+    document.getElementById('karaoke-progress').style.width = progress + '%';
+    
+    // 更新计时器
+    document.getElementById('recording-timer').textContent = (elapsedTime / 1000).toFixed(1) + 's';
+}
+
+// 重置卡拉OK状态
+function resetKaraoke() {
+    const chars = document.querySelectorAll('.karaoke-text .char');
+    chars.forEach(char => {
+        char.classList.remove('active', 'completed');
+    });
+    document.getElementById('karaoke-progress').style.width = '0%';
+    document.getElementById('recording-timer').textContent = '0.0s';
+}
+
+// 停止卡拉OK更新
+function stopKaraoke() {
+    if (karaokeInterval) {
+        clearInterval(karaokeInterval);
+        karaokeInterval = null;
+    }
+}

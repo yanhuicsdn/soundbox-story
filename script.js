@@ -411,75 +411,59 @@ console.log('浏览器支持:', {
 function initKaraokeText() {
     const container = document.getElementById('karaoke-text');
     if (!container) return;
-    
+
     container.innerHTML = '';
-    let currentLineElement = null;
     let currentTime = 0;
-    
+
     recordingText.forEach((line, lineIndex) => {
-        currentLineElement = document.createElement('div');
-        currentLineElement.className = 'line';
-        
-        const chars = line.text.split('');
-        const timePerChar = line.duration / chars.length;
-        
-        chars.forEach((char, charIndex) => {
-            const span = document.createElement('span');
-            span.className = 'char';
-            span.textContent = char;
-            span.dataset.lineIndex = lineIndex;
-            span.dataset.charIndex = charIndex;
-            span.dataset.activateTime = currentTime;
-            span.dataset.duration = timePerChar;
-            
-            // 标点符号处理
-            if (/[，。！？、：；“”\s]/.test(char)) {
-                span.classList.add('punctuation');
-            }
-            
-            currentLineElement.appendChild(span);
-            currentTime += timePerChar;
-        });
-        
-        container.appendChild(currentLineElement);
+        const lineElement = document.createElement('p');
+        lineElement.className = 'karaoke-line';
+        lineElement.textContent = line.text;
+        lineElement.dataset.lineIndex = lineIndex;
+        lineElement.dataset.activateTime = currentTime;
+        lineElement.dataset.duration = line.duration;
+
+        container.appendChild(lineElement);
+        currentTime += line.duration;
     });
 }
 
 // 更新卡拉OK高亮
 function updateKaraokeHighlight(elapsedTime) {
-    const chars = document.querySelectorAll('.karaoke-text .char');
+    const lines = document.querySelectorAll('.karaoke-line');
     const totalTime = recordingText.reduce((sum, line) => sum + line.duration, 0);
-    
-    chars.forEach(char => {
-        const activateTime = parseFloat(char.dataset.activateTime);
-        
-        if (elapsedTime >= activateTime) {
-            char.classList.remove('active');
-            char.classList.add('completed');
+
+    lines.forEach(line => {
+        const activateTime = parseFloat(line.dataset.activateTime);
+        const duration = parseFloat(line.dataset.duration);
+
+        if (elapsedTime >= activateTime && elapsedTime < activateTime + duration) {
+            // 当前正在读的句子
+            line.classList.add('active');
+            line.classList.remove('completed');
+        } else if (elapsedTime >= activateTime + duration) {
+            // 已读完的句子
+            line.classList.remove('active');
+            line.classList.add('completed');
         } else {
-            // 找到当前应该高亮的字符
-            const prevChar = char.previousElementSibling;
-            if (prevChar && prevChar.classList.contains('completed')) {
-                char.classList.add('active');
-            } else if (!prevChar && elapsedTime >= 0) {
-                char.classList.add('active');
-            }
+            // 还未读的句子
+            line.classList.remove('active', 'completed');
         }
     });
-    
+
     // 更新进度条
     const progress = Math.min((elapsedTime / totalTime) * 100, 100);
     document.getElementById('karaoke-progress').style.width = progress + '%';
-    
+
     // 更新计时器
     document.getElementById('recording-timer').textContent = (elapsedTime / 1000).toFixed(1) + 's';
 }
 
 // 重置卡拉OK状态
 function resetKaraoke() {
-    const chars = document.querySelectorAll('.karaoke-text .char');
-    chars.forEach(char => {
-        char.classList.remove('active', 'completed');
+    const lines = document.querySelectorAll('.karaoke-line');
+    lines.forEach(line => {
+        line.classList.remove('active', 'completed');
     });
     document.getElementById('karaoke-progress').style.width = '0%';
     document.getElementById('recording-timer').textContent = '0.0s';

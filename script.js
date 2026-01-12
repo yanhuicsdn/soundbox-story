@@ -238,35 +238,39 @@ document.getElementById('submitPayment').addEventListener('click', async functio
 });
 
 async function uploadRecordingAndOrder() {
-    // TODO: 实现实际的文件上传和订单提交
-
-    // 示例代码 - 需要根据你的后端API调整
+    // 准备FormData
     const formData = new FormData();
     formData.append('audio', recordedBlob, 'recording.wav');
-    formData.append('order', JSON.stringify(orderData));
+    formData.append('childName', orderData.childName);
+    formData.append('voiceType', orderData.voiceType);
+    formData.append('email', orderData.email);
+    formData.append('childAge', orderData.childAge || '');
+    formData.append('wechat', orderData.wechat || '');
+    formData.append('product', JSON.stringify(orderData.product));
 
-    // 发送到你的服务器
-    /*
-    const response = await fetch('YOUR_API_ENDPOINT', {
-        method: 'POST',
-        body: formData
-    });
+    // 发送到邮件服务器
+    // 注意: 需要将下面的URL替换为你的实际服务器地址
+    const apiUrl = 'http://localhost:3000/api/send-recording'; // 本地开发
 
-    if (!response.ok) {
-        throw new Error('服务器错误');
+    // 生产环境请替换为实际的服务器地址,例如:
+    // const apiUrl = 'https://your-server.com/api/send-recording';
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || '服务器错误');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('提交订单失败:', error);
+        throw error;
     }
-
-    return await response.json();
-    */
-
-    // 模拟延迟
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            console.log('订单数据:', orderData);
-            console.log('录音文件大小:', recordedBlob.size, 'bytes');
-            resolve({ success: true });
-        }, 1000);
-    });
 }
 
 // ===== 平滑滚动 =====

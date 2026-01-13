@@ -1,0 +1,91 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function POST(request: NextRequest) {
+    try {
+        console.log('🎙️ 收到录音保存请求');
+
+        const body = await request.json();
+        const {
+            orderId,
+            childName,
+            voiceType,
+            email,
+            productName,
+            audioFileBase64,
+            audioFileName,
+            audioFileMimeType
+        } = body;
+
+        console.log('📋 录音信息:', {
+            orderId,
+            childName,
+            voiceType,
+            email,
+            productName,
+            hasAudio: !!audioFileBase64
+        });
+
+        // 准备订单数据
+        const orderData: any = {
+            orderId,
+            childName,
+            voiceType,
+            email,
+            productName,
+            status: '待支付',
+            amount: '待确认'
+        };
+
+        // 解码录音文件
+        if (audioFileBase64 && audioFileName) {
+            try {
+                console.log('🎙️ 开始解码录音文件...');
+                const audioBuffer = Buffer.from(audioFileBase64, 'base64');
+                orderData.audioFile = {
+                    buffer: audioBuffer,
+                    filename: audioFileName,
+                    mimetype: audioFileMimeType || 'audio/webm'
+                };
+                console.log('✅ 录音文件已解码，大小:', audioBuffer.length, 'bytes');
+            } catch (decodeError) {
+                console.error('❌ 解码录音文件失败:', decodeError);
+                return NextResponse.json({
+                    success: false,
+                    message: '录音文件解码失败'
+                }, { status: 400 });
+            }
+        } else {
+            console.warn('⚠️ 未收到录音文件数据');
+            return NextResponse.json({
+                success: false,
+                message: '缺少录音文件'
+            }, { status: 400 });
+        }
+
+        // 保存到飞书表格
+        try {
+            const { saveOrderToFeishu } = await import('../../../lib/feishu');
+            const result = await saveOrderToFeishu(orderData);
+            console.log('✅ 录音和订单信息已保存到飞书表格');
+
+            return NextResponse.json({
+                success: true,
+                message: '录音保存成功',
+                recordId: result?.record_id
+            });
+        } catch (feishuError: any) {
+            console.error('❌ 保存到飞书表格失败:', feishuError);
+            return NextResponse.json({
+                success: false,
+                message: '保存到飞书失败: ' + feishuError.message
+            }, { status: 500 });
+        }
+
+    } catch (error: any) {
+        console.error('❌ 处理录音保存请求失败:', error);
+        return NextResponse.json({
+            success: false,
+            message: '服务器错误: ' + error.message
+        }, { status: 500 });
+    }
+}

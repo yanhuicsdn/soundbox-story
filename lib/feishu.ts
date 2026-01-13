@@ -113,19 +113,17 @@ async function uploadFileToFeishu(fileBuffer, fileName) {
         const accessToken = await getAccessToken();
         console.log('✅ 访问令牌获取成功');
         
-        // 创建 FormData
+        // 创建 FormData - 使用最简单的方式上传文件
         const FormData = require('form-data');
         const form = new FormData();
         form.append('file_name', fileName);
-        form.append('parent_type', 'bitable_image');
-        form.append('parent_node', FEISHU_CONFIG.baseToken);
-        form.append('size', fileBuffer.length.toString());
+        form.append('parent_type', 'explorer');  // 上传到云空间
         form.append('file', fileBuffer, {
             filename: fileName,
             contentType: 'audio/wav'
         });
         
-        const url = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/upload_all`;
+        const url = `${FEISHU_CONFIG.baseUrl}/drive/v1/files/upload_all`;
         
         console.log('📤 发送文件上传请求到飞书...');
         console.log('URL:', url);

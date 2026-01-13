@@ -25,11 +25,9 @@ function signParams(params: any, key: string) {
         .digest('hex');
 }
 
-export async function POST(request: NextRequest) {
+async function handlePaymentNotify(params: any) {
     try {
         console.log('🔔 收到PayQixiang支付异步通知');
-
-        const params = await request.json();
         console.log('接收到的参数:', JSON.stringify(params, null, 2));
 
         // 验签
@@ -149,6 +147,26 @@ export async function POST(request: NextRequest) {
         console.error('❌ 处理异步通知失败:', error);
         return new NextResponse('fail', { status: 500 });
     }
+}
+
+// 支持 POST 方法（JSON 格式）
+export async function POST(request: NextRequest) {
+    const params = await request.json();
+    return handlePaymentNotify(params);
+}
+
+// 支持 GET 方法（URL 参数格式）
+export async function GET(request: NextRequest) {
+    const { searchParams } = new URL(request.url);
+    const params: any = {};
+    
+    // 将 URL 参数转换为对象
+    searchParams.forEach((value, key) => {
+        params[key] = value;
+    });
+    
+    console.log('📥 收到 GET 请求，参数:', params);
+    return handlePaymentNotify(params);
 }
 
 async function sendConfirmationEmail(orderInfo: any) {

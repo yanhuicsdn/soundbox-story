@@ -238,18 +238,116 @@ confirmRecordingBtn.addEventListener('click', async function() {
     }
 });
 
+// 将音频转换为 WAV 格式
+async function convertToWav(audioBlob) {
+    try {
+        console.log('🔄 开始转换音频为 WAV 格式...');
+        
+        // 创建 AudioContext
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // 将 Blob 转换为 ArrayBuffer
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        
+        // 解码音频数据
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+        
+        console.log('📊 音频信息:', {
+            采样率: audioBuffer.sampleRate,
+            声道数: audioBuffer.numberOfChannels,
+            时长: audioBuffer.duration.toFixed(2) + '秒'
+        });
+        
+        // 将 AudioBuffer 转换为 WAV 格式
+        const wavBlob = audioBufferToWav(audioBuffer);
+        
+        console.log('✅ 转换完成，WAV 大小:', wavBlob.size, 'bytes');
+        
+        return wavBlob;
+    } catch (error) {
+        console.error('❌ 转换 WAV 失败:', error);
+        throw error;
+    }
+}
+
+// 将 AudioBuffer 转换为 WAV Blob
+function audioBufferToWav(audioBuffer) {
+    const numberOfChannels = audioBuffer.numberOfChannels;
+    const sampleRate = audioBuffer.sampleRate;
+    const format = 1; // PCM
+    const bitDepth = 16;
+    
+    const bytesPerSample = bitDepth / 8;
+    const blockAlign = numberOfChannels * bytesPerSample;
+    
+    const data = [];
+    for (let i = 0; i < numberOfChannels; i++) {
+        data.push(audioBuffer.getChannelData(i));
+    }
+    
+    const interleaved = interleave(data);
+    const dataLength = interleaved.length * bytesPerSample;
+    const buffer = new ArrayBuffer(44 + dataLength);
+    const view = new DataView(buffer);
+    
+    // WAV 文件头
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + dataLength, true);
+    writeString(view, 8, 'WAVE');
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true); // fmt chunk size
+    view.setUint16(20, format, true);
+    view.setUint16(22, numberOfChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * blockAlign, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bitDepth, true);
+    writeString(view, 36, 'data');
+    view.setUint32(40, dataLength, true);
+    
+    // 写入音频数据
+    floatTo16BitPCM(view, 44, interleaved);
+    
+    return new Blob([buffer], { type: 'audio/wav' });
+}
+
+function interleave(channelData) {
+    const length = channelData[0].length;
+    const numberOfChannels = channelData.length;
+    const result = new Float32Array(length * numberOfChannels);
+    
+    let offset = 0;
+    for (let i = 0; i < length; i++) {
+        for (let channel = 0; channel < numberOfChannels; channel++) {
+            result[offset++] = channelData[channel][i];
+        }
+    }
+    
+    return result;
+}
+
+function writeString(view, offset, string) {
+    for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+    }
+}
+
+function floatTo16BitPCM(view, offset, input) {
+    for (let i = 0; i < input.length; i++, offset += 2) {
+        const s = Math.max(-1, Math.min(1, input[i]));
+        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    }
+}
+
 async function startRecording() {
     try {
         // 请求麦克风权限
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
         // 创建MediaRecorder实例，使用浏览器支持的格式
-        // 优先尝试使用 WAV 格式，如果不支持则使用默认格式
         let mimeType = 'audio/webm'; // 默认格式
         
-        if (MediaRecorder.isTypeSupported('audio/wav')) {
-            mimeType = 'audio/wav';
-        } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
             mimeType = 'audio/webm;codecs=opus';
         } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
             mimeType = 'audio/ogg;codecs=opus';
@@ -264,13 +362,22 @@ async function startRecording() {
             audioChunks.push(event.data);
         };
 
-        mediaRecorder.onstop = function() {
-            // 使用 MediaRecorder 实际使用的 mimeType
-            recordedBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+        mediaRecorder.onstop = async function() {
+            // 创建原始录音 Blob
+            const originalBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+            console.log('📼 原始录音格式:', originalBlob.type, '大小:', originalBlob.size, 'bytes');
+            
+            // 转换为 WAV 格式
+            try {
+                recordedBlob = await convertToWav(originalBlob);
+                console.log('✅ 已转换为 WAV 格式');
+            } catch (error) {
+                console.error('⚠️ WAV 转换失败，使用原始格式:', error);
+                recordedBlob = originalBlob;
+            }
+            
             const audioUrl = URL.createObjectURL(recordedBlob);
             audioPreview.src = audioUrl;
-            
-            console.log('✅ 录音完成，格式:', recordedBlob.type, '大小:', recordedBlob.size, 'bytes');
 
             // 停止卡拉OK更新
             stopKaraoke();

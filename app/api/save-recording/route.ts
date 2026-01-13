@@ -42,32 +42,17 @@ export async function POST(request: NextRequest) {
                 console.log('🎙️ 开始解码录音文件...');
                 const audioBuffer = Buffer.from(audioFileBase64, 'base64');
                 
-                // 根据实际的音频格式确定文件扩展名
-                const mimeType = audioFileMimeType || 'audio/webm';
-                let fileExtension = '.webm'; // 默认扩展名
-                
-                if (mimeType.includes('wav')) {
-                    fileExtension = '.wav';
-                } else if (mimeType.includes('webm')) {
-                    fileExtension = '.webm';
-                } else if (mimeType.includes('ogg')) {
-                    fileExtension = '.ogg';
-                } else if (mimeType.includes('mp3')) {
-                    fileExtension = '.mp3';
-                }
-                
-                // 生成正确的文件名：宝宝名称_爸爸(或妈妈)_邮箱.扩展名
+                // 生成文件名：宝宝名称_爸爸(或妈妈)_邮箱.wav
+                // 前端已经转换为真正的 WAV 格式
                 const sanitizedChildName = (childName || '未命名').replace(/[^\u4e00-\u9fa5a-zA-Z0-9]/g, '');
                 const sanitizedEmail = (email || 'noemail').replace(/[^a-zA-Z0-9@._-]/g, '');
-                const newFileName = `${sanitizedChildName}_${voiceType}_${sanitizedEmail}${fileExtension}`;
+                const newFileName = `${sanitizedChildName}_${voiceType}_${sanitizedEmail}.wav`;
                 
                 orderData.audioFile = {
                     buffer: audioBuffer,
                     filename: newFileName,
-                    mimetype: mimeType
+                    mimetype: 'audio/wav'
                 };
-                
-                console.log('🎵 音频格式:', mimeType, '扩展名:', fileExtension);
                 console.log('✅ 录音文件已解码，大小:', audioBuffer.length, 'bytes');
                 console.log('📝 文件名:', newFileName);
             } catch (decodeError) {

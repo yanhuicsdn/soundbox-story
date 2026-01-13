@@ -258,13 +258,30 @@ async function startRecording() {
         audioChunks = [];
 
         mediaRecorder.ondataavailable = function(event) {
-            audioChunks.push(event.data);
+            if (event.data && event.data.size > 0) {
+                audioChunks.push(event.data);
+                console.log('📦 收到音频数据块:', event.data.size, 'bytes');
+            }
         };
 
         mediaRecorder.onstop = function() {
+            console.log('🛑 录音停止，共收集', audioChunks.length, '个数据块');
+            
+            if (audioChunks.length === 0) {
+                console.error('❌ 没有收集到音频数据');
+                alert('录音失败：没有收集到音频数据，请重试');
+                return;
+            }
+            
             // 使用原始录音格式，不进行转换
             recordedBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
             console.log('✅ 录音完成，格式:', recordedBlob.type, '大小:', recordedBlob.size, 'bytes');
+            
+            if (recordedBlob.size === 0) {
+                console.error('❌ 录音文件大小为 0');
+                alert('录音失败：录音文件为空，请重试');
+                return;
+            }
             
             const audioUrl = URL.createObjectURL(recordedBlob);
             audioPreview.src = audioUrl;
@@ -277,8 +294,8 @@ async function startRecording() {
             confirmRecordingBtn.style.display = 'inline-block';
         };
 
-        // 开始录音
-        mediaRecorder.start();
+        // 开始录音，每 100ms 收集一次数据
+        mediaRecorder.start(100);
         recordingStartTime = Date.now();
         recordingStatus.textContent = '🔴 正在录音...';
         recordingStatus.classList.add('recording');

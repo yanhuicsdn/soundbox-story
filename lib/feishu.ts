@@ -183,22 +183,21 @@ async function saveOrderToFeishu(orderData) {
         // 获取访问令牌
         const accessToken = await getAccessToken();
         
-        // 构建记录数据
+        // 构建记录数据 - 只使用飞书表格中存在的字段
         const now = Date.now(); // 使用时间戳（毫秒）
         const record = {
-            fields: {
-                '订单号': orderData.orderId,
-                '交易号': orderData.transactionId || '',
-                '支付金额': parseFloat(orderData.amount),
-                '商品名称': orderData.productName || '',
-                '宝宝名字': orderData.childName || '',
-                '声音类型': orderData.voiceType || '',
-                '用户邮箱': orderData.email || '',
-                '支付状态': orderData.status || '已支付',
-                '支付时间': now,
-                '创建时间': now
-            }
+            fields: {} as any
         };
+
+        // 只添加有值的字段，避免 FieldNameNotFound 错误
+        if (orderData.orderId) record.fields['订单号'] = orderData.orderId;
+        if (orderData.transactionId) record.fields['交易号'] = orderData.transactionId;
+        if (orderData.amount) record.fields['支付金额'] = parseFloat(orderData.amount);
+        if (orderData.productName) record.fields['商品名称'] = orderData.productName;
+        if (orderData.childName) record.fields['宝宝名字'] = orderData.childName;
+        if (orderData.voiceType) record.fields['声音类型'] = orderData.voiceType;
+        if (orderData.email) record.fields['用户邮箱'] = orderData.email;
+        if (orderData.status) record.fields['支付状态'] = orderData.status;
 
         // 如果有录音文件，上传到飞书并添加到附件字段
         if (orderData.audioFile) {
@@ -222,7 +221,8 @@ async function saveOrderToFeishu(orderData) {
             }
         }
 
-        console.log('📝 订单数据:', record);
+        console.log('📝 准备写入的字段名称:', Object.keys(record.fields));
+        console.log('📝 订单数据:', JSON.stringify(record, null, 2));
 
         // 添加记录到表格
         const url = `${FEISHU_CONFIG.baseUrl}/bitable/v1/apps/${FEISHU_CONFIG.baseToken}/tables/${FEISHU_CONFIG.tableId}/records`;
@@ -240,6 +240,8 @@ async function saveOrderToFeishu(orderData) {
         
         if (result.code !== 0) {
             console.error('❌ 保存到飞书表格失败:', result);
+            console.error('错误代码:', result.code);
+            console.error('错误信息:', result.msg);
             throw new Error(`保存失败: ${result.msg}`);
         }
 

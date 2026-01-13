@@ -208,10 +208,10 @@ async function saveOrderToFeishu(orderData) {
                     orderData.audioFile.filename
                 );
                 
-                // 使用正确的附件字段格式：单个对象，包含file_token
-                record.fields['录音文件'] = {
+                // 使用附件字段格式：数组包含对象
+                record.fields['录音文件'] = [{
                     file_token: fileToken
-                };
+                }];
                 console.log('✅ 录音文件已上传，file_token:', fileToken);
             } catch (uploadError) {
                 console.error('❌ 上传录音文件失败:', uploadError);

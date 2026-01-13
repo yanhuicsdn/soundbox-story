@@ -70,9 +70,18 @@ export async function POST(request: NextRequest) {
             if (params.param) {
                 try {
                     orderDetails = JSON.parse(params.param);
+                    console.log('📋 订单详情:', {
+                        childName: orderDetails.childName,
+                        voiceType: orderDetails.voiceType,
+                        email: orderDetails.email,
+                        productName: orderDetails.productName,
+                        hasAudioFile: !!orderDetails.audioFileBase64
+                    });
                 } catch (e) {
-                    console.error('解析附加数据失败:', e);
+                    console.error('❌ 解析附加数据失败:', e);
                 }
+            } else {
+                console.warn('⚠️ 未收到附加数据 (param)');
             }
 
             // 准备订单数据
@@ -90,16 +99,19 @@ export async function POST(request: NextRequest) {
             // 如果有录音文件，解码并添加到订单数据
             if (orderDetails.audioFileBase64 && orderDetails.audioFileName) {
                 try {
+                    console.log('🎙️ 开始解码录音文件...');
                     const audioBuffer = Buffer.from(orderDetails.audioFileBase64, 'base64');
                     orderData.audioFile = {
                         buffer: audioBuffer,
                         filename: orderDetails.audioFileName,
                         mimetype: orderDetails.audioFileMimeType || 'audio/webm'
                     };
-                    console.log('🎙️ 录音文件已解码，大小:', audioBuffer.length, 'bytes');
+                    console.log('✅ 录音文件已解码，大小:', audioBuffer.length, 'bytes', '文件名:', orderDetails.audioFileName);
                 } catch (decodeError) {
                     console.error('❌ 解码录音文件失败:', decodeError);
                 }
+            } else {
+                console.warn('⚠️ 未收到录音文件数据');
             }
 
             // 保存订单到飞书表格
@@ -142,6 +154,11 @@ export async function POST(request: NextRequest) {
 async function sendConfirmationEmail(orderInfo: any) {
     const { orderId, transactionId, amount, email, childName, voiceType, audioFile } = orderInfo;
 
+    console.log('📧 开始发送确认邮件...');
+    console.log('收件人:', email);
+    console.log('订单号:', orderId);
+    console.log('有录音附件:', !!audioFile);
+
     if (!email) {
         console.log('⚠️ 未提供邮箱地址，跳过邮件发送');
         return;
@@ -154,11 +171,18 @@ async function sendConfirmationEmail(orderInfo: any) {
         pass: process.env.SMTP_PASS
     };
 
+    console.log('📮 SMTP配置:', {
+        host: SMTP_CONFIG.host,
+        port: SMTP_CONFIG.port,
+        user: SMTP_CONFIG.user ? SMTP_CONFIG.user.substring(0, 5) + '***' : '未配置'
+    });
+
     if (!SMTP_CONFIG.user || !SMTP_CONFIG.pass) {
         console.error('❌ SMTP 配置不完整');
         throw new Error('SMTP 配置不完整');
     }
 
+    console.log('🔧 创建SMTP传输器...');
     const transporter = nodemailer.createTransport({
         host: SMTP_CONFIG.host,
         port: SMTP_CONFIG.port,

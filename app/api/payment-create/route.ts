@@ -6,7 +6,7 @@ const PAY_CONFIG = {
     pid: '2999',
     key: 'hkd9KnN9ets4NZB7sGtK1s2zt7abhinH',
     notifyUrl: 'https://story.66668888.cloud/api/payment-notify',
-    returnUrl: 'https://story.66668888.cloud/payment-result'
+    returnUrl: 'https://story.66668888.cloud/payment-result.html'
 };
 
 function signParams(params: any, key: string) {

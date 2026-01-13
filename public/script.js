@@ -243,8 +243,21 @@ async function startRecording() {
         // 请求麦克风权限
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
-        // 创建MediaRecorder实例
-        mediaRecorder = new MediaRecorder(stream);
+        // 创建MediaRecorder实例，使用浏览器支持的格式
+        // 优先尝试使用 WAV 格式，如果不支持则使用默认格式
+        let mimeType = 'audio/webm'; // 默认格式
+        
+        if (MediaRecorder.isTypeSupported('audio/wav')) {
+            mimeType = 'audio/wav';
+        } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+            mimeType = 'audio/webm;codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/ogg;codecs=opus')) {
+            mimeType = 'audio/ogg;codecs=opus';
+        }
+        
+        console.log('🎙️ 使用录音格式:', mimeType);
+        
+        mediaRecorder = new MediaRecorder(stream, { mimeType: mimeType });
         audioChunks = [];
 
         mediaRecorder.ondataavailable = function(event) {
@@ -252,9 +265,12 @@ async function startRecording() {
         };
 
         mediaRecorder.onstop = function() {
-            recordedBlob = new Blob(audioChunks, { type: 'audio/wav' });
+            // 使用 MediaRecorder 实际使用的 mimeType
+            recordedBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
             const audioUrl = URL.createObjectURL(recordedBlob);
             audioPreview.src = audioUrl;
+            
+            console.log('✅ 录音完成，格式:', recordedBlob.type, '大小:', recordedBlob.size, 'bytes');
 
             // 停止卡拉OK更新
             stopKaraoke();

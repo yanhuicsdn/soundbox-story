@@ -150,7 +150,93 @@ startRecordBtn.addEventListener('click', startRecording);
 stopRecordBtn.addEventListener('click', stopRecording);
 playRecordBtn.addEventListener('click', playRecording);
 reRecordBtn.addEventListener('click', reRecord);
-confirmRecordingBtn.addEventListener('click', proceedToPayment);
+confirmRecordingBtn.addEventListener('click', async function() {
+    if (!recordedBlob) {
+        alert('请先完成录音!');
+        return;
+    }
+
+    // 禁用按钮,防止重复提交
+    this.disabled = true;
+    this.textContent = '正在保存录音...';
+
+    try {
+        // 生成订单ID
+        const orderId = 'SB' + Date.now();
+
+        // 将录音文件转为 Base64
+        let audioFileBase64 = null;
+        let audioFileName = null;
+        let audioFileMimeType = null;
+
+        if (recordedBlob) {
+            console.log('🎙️ 正在处理录音文件...');
+            audioFileName = `recording_${orderId}.wav`;
+            audioFileMimeType = recordedBlob.type || 'audio/wav';
+            
+            // 将 Blob 转为 Base64
+            const reader = new FileReader();
+            audioFileBase64 = await new Promise((resolve, reject) => {
+                reader.onloadend = () => {
+                    const base64 = reader.result.split(',')[1]; // 移除 data:audio/wav;base64, 前缀
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(recordedBlob);
+            });
+            
+            console.log('✅ 录音文件已转换为 Base64，大小:', audioFileBase64.length, '字符');
+
+            // 立即上传录音到飞书表格
+            console.log('📤 正在上传录音到飞书表格...');
+            const saveResponse = await fetch('/api/save-recording', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    orderId: orderId,
+                    childName: orderData.childName,
+                    voiceType: orderData.voiceType,
+                    email: orderData.email,
+                    productName: orderData.product.name,
+                    audioFileBase64: audioFileBase64,
+                    audioFileName: audioFileName,
+                    audioFileMimeType: audioFileMimeType
+                })
+            });
+
+            const saveResult = await saveResponse.json();
+            
+            if (!saveResult.success) {
+                throw new Error(saveResult.message || '保存录音到飞书失败');
+            }
+
+            console.log('✅ 录音已成功保存到飞书表格');
+        }
+
+        // 构建支付页面URL参数
+        const params = new URLSearchParams({
+            orderId: orderId,
+            product: orderData.product.name,
+            amount: orderData.product.price,
+            childName: orderData.childName,
+            voiceType: orderData.voiceType,
+            email: orderData.email
+        });
+
+        // 跳转到支付页面
+        const payUrl = window.location.origin + '/payment-integration.html?' + params.toString();
+
+        console.log('跳转到支付页面:', payUrl);
+        window.location.href = payUrl;
+    } catch (error) {
+        console.error('❌ 处理失败:', error);
+        alert('保存录音失败: ' + error.message + '\n请重试或联系客服');
+        this.disabled = false;
+        this.textContent = '提交订单';
+    }
+});
 
 async function startRecording() {
     try {
@@ -261,119 +347,6 @@ function reRecord() {
     confirmRecordingBtn.style.display = 'none';
     recordingStatus.textContent = '';
 }
-
-function proceedToPayment() {
-    if (!recordedBlob) {
-        alert('请先完成录音!');
-        return;
-    }
-
-    // 切换到支付界面
-    document.getElementById('recording-section').style.display = 'none';
-    document.getElementById('payment-section').style.display = 'block';
-
-    // 填充订单摘要
-    document.getElementById('summary-product').textContent = orderData.product.name;
-    document.getElementById('summary-name').textContent = orderData.childName + '（' + orderData.voiceType + '的声音）';
-    document.getElementById('summary-email').textContent = orderData.email;
-    document.getElementById('summary-price').textContent = '¥' + orderData.product.price;
-
-    // 滚动到顶部
-    document.querySelector('.modal-content').scrollTop = 0;
-}
-
-// ===== 支付提交 =====
-document.getElementById('submitPayment').addEventListener('click', async function() {
-    // 禁用按钮,防止重复提交
-    this.disabled = true;
-    this.textContent = '正在保存录音...';
-
-    try {
-        // 生成订单ID
-        const orderId = 'SB' + Date.now();
-
-        // 将录音文件转为 Base64
-        let audioFileBase64 = null;
-        let audioFileName = null;
-        let audioFileMimeType = null;
-
-        if (recordedBlob) {
-            console.log('🎙️ 正在处理录音文件...');
-            audioFileName = `recording_${orderId}.wav`;
-            audioFileMimeType = recordedBlob.type || 'audio/wav';
-            
-            // 将 Blob 转为 Base64
-            const reader = new FileReader();
-            audioFileBase64 = await new Promise((resolve, reject) => {
-                reader.onloadend = () => {
-                    const base64 = reader.result.split(',')[1]; // 移除 data:audio/wav;base64, 前缀
-                    resolve(base64);
-                };
-                reader.onerror = reject;
-                reader.readAsDataURL(recordedBlob);
-            });
-            
-            console.log('✅ 录音文件已转换为 Base64，大小:', audioFileBase64.length, '字符');
-
-            // 立即上传录音到飞书表格
-            console.log('📤 正在上传录音到飞书表格...');
-            const saveResponse = await fetch('/api/save-recording', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    orderId: orderId,
-                    childName: orderData.childName,
-                    voiceType: orderData.voiceType,
-                    email: orderData.email,
-                    productName: orderData.product.name,
-                    audioFileBase64: audioFileBase64,
-                    audioFileName: audioFileName,
-                    audioFileMimeType: audioFileMimeType
-                })
-            });
-
-            const saveResult = await saveResponse.json();
-            
-            if (!saveResult.success) {
-                throw new Error(saveResult.message || '保存录音到飞书失败');
-            }
-
-            console.log('✅ 录音已成功保存到飞书表格');
-            
-            // 保存到 localStorage（用于支付页面获取）
-            localStorage.setItem('audioFileData', JSON.stringify({
-                base64: audioFileBase64,
-                filename: audioFileName,
-                mimetype: audioFileMimeType,
-                savedToFeishu: true,
-                orderId: orderId
-            }));
-        }
-
-        // 构建支付页面URL参数
-        const params = new URLSearchParams({
-            orderId: orderId,
-            product: orderData.product.name,
-            amount: orderData.product.price,
-            childName: orderData.childName,
-            voiceType: orderData.voiceType,
-            email: orderData.email
-        });
-
-        // 跳转到支付页面
-        const payUrl = window.location.origin + '/payment-integration.html?' + params.toString();
-
-        console.log('跳转到支付页面:', payUrl);
-        window.location.href = payUrl;
-    } catch (error) {
-        console.error('❌ 处理失败:', error);
-        alert('保存录音失败: ' + error.message + '\n请重试或联系客服');
-        this.disabled = false;
-        this.textContent = '确认订单，前往支付';
-    }
-});
 
 async function uploadRecordingAndOrder() {
     // 准备FormData

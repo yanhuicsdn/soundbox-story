@@ -109,7 +109,9 @@ async function createTableFields() {
  */
 async function uploadFileToFeishu(fileBuffer, fileName) {
     try {
+        console.log('🔑 获取飞书访问令牌...');
         const accessToken = await getAccessToken();
+        console.log('✅ 访问令牌获取成功');
         
         // 创建 FormData
         const FormData = require('form-data');
@@ -121,6 +123,11 @@ async function uploadFileToFeishu(fileBuffer, fileName) {
         
         const url = `${FEISHU_CONFIG.baseUrl}/drive/v1/files/upload_all`;
         
+        console.log('📤 发送文件上传请求到飞书...');
+        console.log('URL:', url);
+        console.log('文件名:', fileName);
+        console.log('文件大小:', fileBuffer.length, 'bytes');
+        
         const response = await fetch(url, {
             method: 'POST',
             headers: {
@@ -130,17 +137,36 @@ async function uploadFileToFeishu(fileBuffer, fileName) {
             body: form
         });
 
-        const result = await response.json();
+        console.log('📥 收到响应, 状态码:', response.status);
+        console.log('响应头 Content-Type:', response.headers.get('content-type'));
+
+        // 先获取响应文本
+        const responseText = await response.text();
+        console.log('响应内容:', responseText.substring(0, 500));
+
+        // 检查响应状态
+        if (!response.ok) {
+            throw new Error(`HTTP错误: ${response.status} ${response.statusText}, 响应: ${responseText}`);
+        }
+
+        // 尝试解析 JSON
+        let result;
+        try {
+            result = JSON.parse(responseText);
+        } catch (parseError) {
+            throw new Error(`解析响应JSON失败: ${parseError.message}, 响应内容: ${responseText}`);
+        }
         
         if (result.code !== 0) {
-            throw new Error(`文件上传失败: ${result.msg}`);
+            throw new Error(`文件上传失败: code=${result.code}, msg=${result.msg}`);
         }
 
         console.log('✅ 文件上传成功, file_token:', result.data.file_token);
         return result.data.file_token;
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('❌ 上传文件到飞书失败:', error);
+        console.error('错误详情:', error.message);
         throw error;
     }
 }

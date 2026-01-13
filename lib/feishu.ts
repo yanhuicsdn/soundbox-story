@@ -113,17 +113,16 @@ async function uploadFileToFeishu(fileBuffer, fileName) {
         const accessToken = await getAccessToken();
         console.log('✅ 访问令牌获取成功');
         
-        // 创建 FormData - 使用最简单的方式上传文件
+        // 创建 FormData - 使用上传素材API
         const FormData = require('form-data');
         const form = new FormData();
         form.append('file_name', fileName);
-        form.append('parent_type', 'explorer');  // 上传到云空间
-        form.append('file', fileBuffer, {
-            filename: fileName,
-            contentType: 'audio/wav'
-        });
+        form.append('parent_type', 'bitable_image');
+        form.append('parent_node', FEISHU_CONFIG.baseToken);
+        form.append('size', fileBuffer.length);
+        form.append('file', fileBuffer, fileName);
         
-        const url = `${FEISHU_CONFIG.baseUrl}/drive/v1/files/upload_all`;
+        const url = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/upload_all`;
         
         console.log('📤 发送文件上传请求到飞书...');
         console.log('URL:', url);
@@ -201,16 +200,26 @@ async function saveOrderToFeishu(orderData) {
             }
         };
 
-        // 暂时不上传文件到飞书附件字段，将文件信息保存为备注
-        // TODO: 后续研究飞书附件字段的正确上传方式
+        // 如果有录音文件，上传到飞书并添加到附件字段
         if (orderData.audioFile) {
-            console.log('🎙️ 记录录音文件信息（暂不上传文件）');
-            const fileInfo = `录音文件: ${orderData.audioFile.filename}, 大小: ${orderData.audioFile.buffer.length} bytes`;
-            // 可以添加一个备注字段来记录文件信息
-            if (!record.fields['备注']) {
+            try {
+                console.log('🎙️ 上传录音文件到飞书...');
+                const fileToken = await uploadFileToFeishu(
+                    orderData.audioFile.buffer,
+                    orderData.audioFile.filename
+                );
+                
+                // 使用正确的附件字段格式：单个对象，包含file_token
+                record.fields['录音文件'] = {
+                    file_token: fileToken
+                };
+                console.log('✅ 录音文件已上传，file_token:', fileToken);
+            } catch (uploadError) {
+                console.error('❌ 上传录音文件失败:', uploadError);
+                // 录音文件上传失败不影响订单保存，记录到备注
+                const fileInfo = `录音文件上传失败: ${orderData.audioFile.filename}, 大小: ${orderData.audioFile.buffer.length} bytes`;
                 record.fields['备注'] = fileInfo;
             }
-            console.log('✅ 录音文件信息已记录');
         }
 
         console.log('📝 订单数据:', record);

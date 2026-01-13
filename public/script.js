@@ -529,3 +529,23 @@ function stopKaraoke() {
         karaokeInterval = null;
     }
 }
+
+// ===== 微信二维码弹窗 =====
+function showWechatQR(event) {
+    event.preventDefault();
+    const modal = document.getElementById('wechat-modal');
+    modal.style.display = 'block';
+}
+
+function closeWechatQR() {
+    const modal = document.getElementById('wechat-modal');
+    modal.style.display = 'none';
+}
+
+// 点击模态框外部关闭
+window.addEventListener('click', function(event) {
+    const wechatModal = document.getElementById('wechat-modal');
+    if (event.target === wechatModal) {
+        closeWechatQR();
+    }
+});

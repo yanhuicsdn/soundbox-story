@@ -429,8 +429,8 @@
                     </div>
                     <div class="footer-link-group">
                         <h4>联系</h4>
-                        <a href="mailto:hello@soundbox.com">邮箱</a>
-                        <a href="#">微信客服</a>
+                        <a href="mailto:53354108@qq.com">📧 邮箱：53354108@qq.com</a>
+                        <a href="#" onclick="showWechatQR(event)">💬 微信客服</a>
                     </div>
                 </div>
             </div>
@@ -439,6 +439,17 @@
             </div>
         </div>
     </footer>
+
+    <!-- 微信二维码模态框 -->
+    <div id="wechat-modal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <span class="close" onclick="closeWechatQR()">&times;</span>
+            <h2 style="margin-bottom: 20px;">💬 微信客服</h2>
+            <p style="margin-bottom: 20px; color: #666;">扫描二维码添加客服微信</p>
+            <img src="/images/wechat-qrcode.png" alt="微信二维码" style="width: 100%; max-width: 300px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+            <p style="margin-top: 20px; font-size: 14px; color: #999;">如有任何问题，欢迎咨询</p>
+        </div>
+    </div>
 
     <!-- 订单模态框 -->
     <div id="order-modal" class="modal">

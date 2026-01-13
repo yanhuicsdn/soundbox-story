@@ -201,25 +201,16 @@ async function saveOrderToFeishu(orderData) {
             }
         };
 
-        // 如果有录音文件，上传到飞书
+        // 暂时不上传文件到飞书附件字段，将文件信息保存为备注
+        // TODO: 后续研究飞书附件字段的正确上传方式
         if (orderData.audioFile) {
-            try {
-                console.log('🎙️ 上传录音文件到飞书...');
-                const fileToken = await uploadFileToFeishu(
-                    orderData.audioFile.buffer,
-                    orderData.audioFile.filename
-                );
-                record.fields['录音文件'] = [{
-                    file_token: fileToken,
-                    name: orderData.audioFile.filename,
-                    size: orderData.audioFile.buffer.length,
-                    type: orderData.audioFile.mimetype
-                }];
-                console.log('✅ 录音文件已添加到记录');
-            } catch (uploadError) {
-                console.error('❌ 上传录音文件失败:', uploadError);
-                // 录音文件上传失败不影响订单保存
+            console.log('🎙️ 记录录音文件信息（暂不上传文件）');
+            const fileInfo = `录音文件: ${orderData.audioFile.filename}, 大小: ${orderData.audioFile.buffer.length} bytes`;
+            // 可以添加一个备注字段来记录文件信息
+            if (!record.fields['备注']) {
+                record.fields['备注'] = fileInfo;
             }
+            console.log('✅ 录音文件信息已记录');
         }
 
         console.log('📝 订单数据:', record);

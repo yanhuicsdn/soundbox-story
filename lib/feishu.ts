@@ -113,44 +113,39 @@ async function uploadFileToFeishu(fileBuffer, fileName) {
         const accessToken = await getAccessToken();
         console.log('✅ 访问令牌获取成功');
         
-        // 创建 FormData - 使用上传素材API
-        const FormData = require('form-data');
-        const form = new FormData();
-        form.append('file_name', fileName);
-        form.append('parent_type', 'bitable_image');
-        form.append('parent_node', FEISHU_CONFIG.baseToken);
-        form.append('size', fileBuffer.length);
-        form.append('file', fileBuffer, fileName);
+        // 使用 curl 命令上传文件（已验证可以成功）
+        const fs = require('fs');
+        const { execSync } = require('child_process');
+        const tmpFile = `/tmp/${fileName}`;
+        
+        // 将 buffer 写入临时文件
+        fs.writeFileSync(tmpFile, fileBuffer);
         
         const url = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/upload_all`;
         
-        console.log('📤 发送文件上传请求到飞书...');
+        console.log('📤 使用 curl 上传文件到飞书...');
         console.log('URL:', url);
         console.log('文件名:', fileName);
         console.log('文件大小:', fileBuffer.length, 'bytes');
         
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                ...form.getHeaders()
-            },
-            body: form
-        });
+        // 构建 curl 命令
+        const curlCommand = `curl -s -X POST '${url}' \
+            -H 'Authorization: Bearer ${accessToken}' \
+            -F 'file_name=${fileName}' \
+            -F 'parent_type=bitable_image' \
+            -F 'parent_node=${FEISHU_CONFIG.baseToken}' \
+            -F 'size=${fileBuffer.length}' \
+            -F 'file=@${tmpFile}'`;
+        
+        // 执行 curl 命令
+        const responseText = execSync(curlCommand, { encoding: 'utf-8' });
+        
+        // 删除临时文件
+        fs.unlinkSync(tmpFile);
+        
+        console.log('📥 收到响应:', responseText.substring(0, 200));
 
-        console.log('📥 收到响应, 状态码:', response.status);
-        console.log('响应头 Content-Type:', response.headers.get('content-type'));
-
-        // 先获取响应文本
-        const responseText = await response.text();
-        console.log('响应内容:', responseText.substring(0, 500));
-
-        // 检查响应状态
-        if (!response.ok) {
-            throw new Error(`HTTP错误: ${response.status} ${response.statusText}, 响应: ${responseText}`);
-        }
-
-        // 尝试解析 JSON
+        // 解析响应
         let result;
         try {
             result = JSON.parse(responseText);

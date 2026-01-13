@@ -41,9 +41,9 @@ export async function POST(request: NextRequest) {
             try {
                 console.log('🎙️ 开始解码录音文件...');
                 const audioBuffer = Buffer.from(audioFileBase64, 'base64');
+                const mimeType = audioFileMimeType || 'audio/webm';
                 
                 // 根据实际的音频格式确定文件扩展名
-                const mimeType = audioFileMimeType || 'audio/webm';
                 let fileExtension = '.webm'; // 默认扩展名
                 
                 if (mimeType.includes('wav')) {

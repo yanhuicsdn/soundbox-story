@@ -116,12 +116,16 @@ async function uploadFileToFeishu(fileBuffer, fileName) {
         // 创建 FormData
         const FormData = require('form-data');
         const form = new FormData();
-        form.append('file', fileBuffer, fileName);
-        form.append('parent_type', 'bitable_file');
+        form.append('file_name', fileName);
+        form.append('parent_type', 'bitable_image');
         form.append('parent_node', FEISHU_CONFIG.baseToken);
         form.append('size', fileBuffer.length.toString());
+        form.append('file', fileBuffer, {
+            filename: fileName,
+            contentType: 'audio/wav'
+        });
         
-        const url = `${FEISHU_CONFIG.baseUrl}/drive/v1/files/upload_all`;
+        const url = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/upload_all`;
         
         console.log('📤 发送文件上传请求到飞书...');
         console.log('URL:', url);

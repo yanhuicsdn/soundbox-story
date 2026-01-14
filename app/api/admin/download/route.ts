@@ -48,9 +48,11 @@ export async function GET(request: NextRequest) {
 
     } catch (error: any) {
         console.error('❌ 下载文件失败:', error);
+        console.error('错误堆栈:', error.stack);
         return NextResponse.json({
             success: false,
-            message: error.message || '下载文件失败'
+            message: error.message || '下载文件失败',
+            error: error.toString()
         }, { status: 500 });
     }
 }

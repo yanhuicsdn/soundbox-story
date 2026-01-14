@@ -422,23 +422,39 @@ async function downloadFileFromFeishu(fileToken: string) {
         console.log('📥 开始下载文件, file_token:', fileToken);
         const accessToken = await getAccessToken();
         
-        // 步骤1: 先获取临时下载链接
+        // 方法1: 尝试使用 bitable 附件下载 API
         // 参考: https://open.feishu.cn/document/server-docs/docs/bitable-v1/app-table-attachment/download
-        const getTempUrlEndpoint = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/${fileToken}/download`;
-        console.log('📍 获取临时下载链接:', getTempUrlEndpoint);
+        const bitableDownloadUrl = `${FEISHU_CONFIG.baseUrl}/bitable/v1/apps/${FEISHU_CONFIG.baseToken}/tables/${FEISHU_CONFIG.tableId}/records/attachments/${fileToken}`;
+        console.log('📍 尝试方法1 - Bitable附件下载:', bitableDownloadUrl);
         
-        const tempUrlResponse = await fetch(getTempUrlEndpoint, {
+        let response = await fetch(bitableDownloadUrl, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${accessToken}`
             }
         });
 
-        console.log('📡 临时链接响应状态:', tempUrlResponse.status, tempUrlResponse.statusText);
+        console.log('📡 方法1响应状态:', response.status, response.statusText);
 
-        if (!tempUrlResponse.ok) {
-            const errorText = await tempUrlResponse.text();
-            console.error('❌ 获取临时链接失败:', errorText);
+        // 如果方法1失败，尝试方法2：使用 drive/medias 下载
+        if (!response.ok) {
+            console.log('⚠️ 方法1失败，尝试方法2 - Drive媒体下载');
+            const driveDownloadUrl = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/${fileToken}/download`;
+            console.log('📍 方法2 URL:', driveDownloadUrl);
+            
+            response = await fetch(driveDownloadUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            
+            console.log('📡 方法2响应状态:', response.status, response.statusText);
+        }
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ 下载失败响应:', errorText);
             
             // 尝试解析错误信息
             let errorMsg = errorText;
@@ -450,12 +466,11 @@ async function downloadFileFromFeishu(fileToken: string) {
                 // 忽略JSON解析错误
             }
             
-            throw new Error(`获取临时链接失败: ${tempUrlResponse.status} ${tempUrlResponse.statusText} - ${errorMsg}`);
+            throw new Error(`下载失败: ${response.status} ${response.statusText} - ${errorMsg}`);
         }
 
-        // 步骤2: 直接从响应中获取文件内容
-        // 飞书的 /download 接口直接返回文件流
-        const buffer = await tempUrlResponse.arrayBuffer();
+        // 获取文件内容
+        const buffer = await response.arrayBuffer();
         console.log('✅ 文件下载成功，大小:', buffer.byteLength, 'bytes');
         
         return Buffer.from(buffer);

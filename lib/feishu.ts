@@ -423,62 +423,41 @@ async function downloadFileFromFeishu(downloadUrl: string) {
         console.log('下载URL:', downloadUrl);
         const accessToken = await getAccessToken();
         
-        // 直接使用 curl 下载文件
-        const fs = require('fs');
-        const { execSync } = require('child_process');
-        const tmpFile = `/tmp/download_${Date.now()}.webm`;
+        // 使用 fetch API 下载文件
+        console.log('📥 使用 fetch 下载文件...');
         
-        console.log('📥 使用 curl 下载文件...');
-        console.log('临时文件路径:', tmpFile);
-        
-        // 构建 curl 命令，添加 -v 查看详细信息
-        const curlCommand = `curl -s -L -X GET '${downloadUrl}' \
-            -H 'Authorization: Bearer ${accessToken}' \
-            -o '${tmpFile}' \
-            -w '%{http_code}' 2>&1`;
-        
-        console.log('🔧 执行 curl 命令...');
-        
-        // 执行 curl 命令，获取 HTTP 状态码
-        let httpCode;
-        let curlOutput;
-        try {
-            curlOutput = execSync(curlCommand, { encoding: 'utf-8' });
-            // 最后一行是 HTTP 状态码
-            const lines = curlOutput.trim().split('\n');
-            httpCode = lines[lines.length - 1];
-            console.log('📡 HTTP 状态码:', httpCode);
-            console.log('curl 输出:', curlOutput);
-        } catch (execError: any) {
-            console.error('❌ curl 执行失败:', execError.message);
-            console.error('curl 输出:', execError.stdout || execError.stderr);
-            throw new Error(`curl 执行失败: ${execError.message}`);
-        }
-
-        // 检查 HTTP 状态码
-        if (httpCode !== '200') {
-            // 读取错误响应
-            let errorContent = '';
-            if (fs.existsSync(tmpFile)) {
-                errorContent = fs.readFileSync(tmpFile, 'utf-8');
-                fs.unlinkSync(tmpFile);
+        const response = await fetch(downloadUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
             }
-            console.error('❌ 下载失败，HTTP 状态码:', httpCode);
-            console.error('错误响应内容:', errorContent);
-            throw new Error(`下载失败: HTTP ${httpCode} - ${errorContent.substring(0, 200)}`);
+        });
+
+        console.log('📡 响应状态:', response.status, response.statusText);
+        console.log('📋 响应头:', Object.fromEntries(response.headers.entries()));
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ 下载失败');
+            console.error('响应内容:', errorText);
+            
+            // 尝试解析错误信息
+            let errorMsg = errorText;
+            try {
+                const errorJson = JSON.parse(errorText);
+                errorMsg = `code: ${errorJson.code}, msg: ${errorJson.msg}`;
+                console.error('错误详情:', errorJson);
+            } catch (e) {
+                console.error('无法解析为JSON');
+            }
+            
+            throw new Error(`下载失败: ${response.status} ${response.statusText} - ${errorMsg.substring(0, 200)}`);
         }
 
-        // 检查文件是否存在
-        if (!fs.existsSync(tmpFile)) {
-            throw new Error('下载的文件不存在');
-        }
-
-        // 读取文件内容
-        const fileBuffer = fs.readFileSync(tmpFile);
+        // 获取文件内容
+        const arrayBuffer = await response.arrayBuffer();
+        const fileBuffer = Buffer.from(arrayBuffer);
         console.log('✅ 文件下载成功，大小:', fileBuffer.length, 'bytes');
-        
-        // 删除临时文件
-        fs.unlinkSync(tmpFile);
         
         return fileBuffer;
 

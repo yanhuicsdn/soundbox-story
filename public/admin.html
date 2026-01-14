@@ -471,7 +471,7 @@
                 console.log('📥 开始下载文件:', fileName);
                 console.log('附件对象:', audioFileObj);
                 
-                const url = `/api/admin/download?tmpUrl=${encodeURIComponent(audioFileObj.tmp_url)}&fileName=${encodeURIComponent(fileName)}`;
+                const url = `/api/admin/download?downloadUrl=${encodeURIComponent(audioFileObj.url)}&fileName=${encodeURIComponent(fileName)}`;
                 console.log('📍 请求URL:', url);
                 
                 const response = await fetch(url, {

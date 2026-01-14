@@ -415,49 +415,15 @@ async function getAllOrders() {
 
 /**
  * 下载飞书文件
- * @param {string} tmpUrl - 获取临时下载链接的URL
+ * @param {string} downloadUrl - 直接下载URL（包含extra参数）
  */
-async function downloadFileFromFeishu(tmpUrl: string) {
+async function downloadFileFromFeishu(downloadUrl: string) {
     try {
         console.log('📥 开始下载文件');
-        console.log('临时链接URL:', tmpUrl);
+        console.log('下载URL:', downloadUrl);
         const accessToken = await getAccessToken();
         
-        // 步骤1: 先获取临时下载链接
-        console.log('📍 步骤1: 获取临时下载链接');
-        const response = await fetch(tmpUrl, {
-            method: 'GET',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`
-            }
-        });
-
-        console.log('📡 响应状态:', response.status, response.statusText);
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ 获取临时链接失败:', errorText);
-            throw new Error(`获取临时链接失败: ${response.status} - ${errorText.substring(0, 200)}`);
-        }
-
-        const result = await response.json();
-        console.log('📦 临时链接响应:', JSON.stringify(result, null, 2));
-
-        if (result.code !== 0) {
-            throw new Error(`获取临时链接失败: code=${result.code}, msg=${result.msg}`);
-        }
-
-        // 从响应中获取临时下载URL
-        const fileTokens = Object.keys(result.data.tmp_download_urls || {});
-        if (fileTokens.length === 0) {
-            throw new Error('响应中没有临时下载链接');
-        }
-
-        const tempDownloadUrl = result.data.tmp_download_urls[fileTokens[0]];
-        console.log('📍 步骤2: 使用临时链接下载文件');
-        console.log('临时下载URL:', tempDownloadUrl);
-
-        // 步骤2: 使用临时链接下载文件（使用 curl）
+        // 直接使用 curl 下载文件
         const fs = require('fs');
         const { execSync } = require('child_process');
         const tmpFile = `/tmp/download_${Date.now()}.webm`;
@@ -465,20 +431,27 @@ async function downloadFileFromFeishu(tmpUrl: string) {
         console.log('📥 使用 curl 下载文件...');
         console.log('临时文件路径:', tmpFile);
         
-        // 构建 curl 命令
-        const curlCommand = `curl -s -L -X GET '${tempDownloadUrl}' \
+        // 构建 curl 命令，添加 -v 查看详细信息
+        const curlCommand = `curl -s -L -X GET '${downloadUrl}' \
+            -H 'Authorization: Bearer ${accessToken}' \
             -o '${tmpFile}' \
-            -w '%{http_code}'`;
+            -w '%{http_code}' 2>&1`;
         
         console.log('🔧 执行 curl 命令...');
         
         // 执行 curl 命令，获取 HTTP 状态码
         let httpCode;
+        let curlOutput;
         try {
-            httpCode = execSync(curlCommand, { encoding: 'utf-8' }).trim();
+            curlOutput = execSync(curlCommand, { encoding: 'utf-8' });
+            // 最后一行是 HTTP 状态码
+            const lines = curlOutput.trim().split('\n');
+            httpCode = lines[lines.length - 1];
             console.log('📡 HTTP 状态码:', httpCode);
+            console.log('curl 输出:', curlOutput);
         } catch (execError: any) {
             console.error('❌ curl 执行失败:', execError.message);
+            console.error('curl 输出:', execError.stdout || execError.stderr);
             throw new Error(`curl 执行失败: ${execError.message}`);
         }
 

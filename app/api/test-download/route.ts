@@ -54,8 +54,7 @@ export async function GET(request: NextRequest) {
         
         console.log('📥 开始测试下载');
         console.log('audioFile 完整对象:', JSON.stringify(audioFileObj, null, 2));
-        console.log('tmp_url:', audioFileObj.tmp_url);
-        console.log('url:', audioFileObj.url);
+        console.log('使用 url 字段:', audioFileObj.url);
 
         // 测试下载
         const { downloadFileFromFeishu, getAccessToken } = await import('../../../lib/feishu');
@@ -68,8 +67,8 @@ export async function GET(request: NextRequest) {
         let downloadError = null;
         
         try {
-            // 使用tmp_url获取临时下载链接
-            fileBuffer = await downloadFileFromFeishu(audioFileObj.tmp_url);
+            // 使用url字段直接下载（包含extra参数）
+            fileBuffer = await downloadFileFromFeishu(audioFileObj.url);
             console.log('✅ 下载测试成功！文件大小:', fileBuffer.length, 'bytes');
         } catch (downloadErr: any) {
             downloadError = downloadErr;

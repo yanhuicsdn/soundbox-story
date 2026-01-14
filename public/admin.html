@@ -468,7 +468,10 @@
         // 下载录音文件
         async function downloadAudio(fileToken, fileName) {
             try {
-                const url = `/api/admin/download?fileToken=${fileToken}&fileName=${encodeURIComponent(fileName)}`;
+                console.log('📥 开始下载文件:', fileName, 'fileToken:', fileToken);
+                
+                const url = `/api/admin/download?fileToken=${encodeURIComponent(fileToken)}&fileName=${encodeURIComponent(fileName)}`;
+                console.log('📍 请求URL:', url);
                 
                 const response = await fetch(url, {
                     headers: {
@@ -476,11 +479,17 @@
                     }
                 });
 
+                console.log('📡 响应状态:', response.status, response.statusText);
+
                 if (!response.ok) {
-                    throw new Error('下载失败');
+                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                    console.error('❌ 下载失败:', errorData);
+                    throw new Error(errorData.message || '下载失败');
                 }
 
                 const blob = await response.blob();
+                console.log('📦 文件大小:', blob.size, 'bytes');
+                
                 const downloadUrl = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = downloadUrl;
@@ -492,8 +501,8 @@
 
                 console.log('✅ 文件下载成功');
             } catch (error) {
-                console.error('下载失败:', error);
-                alert('下载失败: ' + error.message);
+                console.error('❌ 下载失败:', error);
+                alert('下载失败: ' + error.message + '\n请查看浏览器控制台获取详细信息');
             }
         }
 

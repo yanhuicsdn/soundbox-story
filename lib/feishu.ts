@@ -423,6 +423,7 @@ async function downloadFileFromFeishu(fileToken: string) {
         const accessToken = await getAccessToken();
         
         const url = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/${fileToken}/download`;
+        console.log('📍 下载URL:', url);
         
         const response = await fetch(url, {
             method: 'GET',
@@ -431,8 +432,12 @@ async function downloadFileFromFeishu(fileToken: string) {
             }
         });
 
+        console.log('📡 响应状态:', response.status, response.statusText);
+
         if (!response.ok) {
-            throw new Error(`下载失败: ${response.statusText}`);
+            const errorText = await response.text();
+            console.error('❌ 下载失败响应:', errorText);
+            throw new Error(`下载失败: ${response.status} ${response.statusText} - ${errorText}`);
         }
 
         const buffer = await response.arrayBuffer();
@@ -440,8 +445,9 @@ async function downloadFileFromFeishu(fileToken: string) {
         
         return Buffer.from(buffer);
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('❌ 下载文件失败:', error);
+        console.error('错误详情:', error.message);
         throw error;
     }
 }

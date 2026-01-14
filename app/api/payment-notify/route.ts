@@ -125,7 +125,7 @@ async function handlePaymentNotify(params: any) {
                 console.error('❌ 更新飞书表格失败:', feishuError);
             }
 
-            // 发送确认邮件
+            // 发送确认邮件（不带附件）
             try {
                 await sendConfirmationEmail({
                     orderId: outTradeNo,
@@ -134,7 +134,7 @@ async function handlePaymentNotify(params: any) {
                     email: orderDetails.email,
                     childName: orderDetails.childName,
                     voiceType: orderDetails.voiceType,
-                    audioFile: orderData.audioFile
+                    audioFile: null  // 不发送附件
                 });
                 console.log('✅ 确认邮件已发送');
             } catch (emailError) {
@@ -273,7 +273,7 @@ async function sendConfirmationEmail(orderInfo: any) {
 
                         <p><strong>⏰ 制作时间：</strong>我们将在 24-48 小时内完成语音故事的制作。</p>
                         <p><strong>📧 交付方式：</strong>完成后会发送邮件到此邮箱，包含音频文件下载链接。</p>
-                        ${audioFile ? '<p><strong>🎙️ 录音文件：</strong>您的录音文件已作为附件发送。</p>' : ''}
+                        <p><strong>🎙️ 录音文件：</strong>您的录音文件已成功上传，我们会根据您的录音进行语音克隆。</p>
                         
                         <p style="margin-top: 30px;">如有任何问题，请随时联系我们的客服。</p>
                         

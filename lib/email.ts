@@ -1,7 +1,14 @@
 import { Resend } from 'resend';
 
-// 初始化 Resend 客户端
-const resend = new Resend(process.env.RESEND_API_KEY);
+/**
+ * 获取 Resend 客户端实例（按需初始化）
+ */
+function getResendClient() {
+    if (!process.env.RESEND_API_KEY) {
+        throw new Error('RESEND_API_KEY 未配置');
+    }
+    return new Resend(process.env.RESEND_API_KEY);
+}
 
 /**
  * 发送订单确认邮件
@@ -25,10 +32,7 @@ export async function sendOrderConfirmationEmail(orderInfo: {
         return;
     }
 
-    if (!process.env.RESEND_API_KEY) {
-        console.error('❌ RESEND_API_KEY 未配置');
-        throw new Error('RESEND_API_KEY 未配置');
-    }
+    const resend = getResendClient();
 
     const emailHtml = `
         <!DOCTYPE html>
@@ -121,10 +125,7 @@ export async function sendTestEmail(email: string) {
     console.log('📧 开始发送测试邮件...');
     console.log('收件人:', email);
 
-    if (!process.env.RESEND_API_KEY) {
-        console.error('❌ RESEND_API_KEY 未配置');
-        throw new Error('RESEND_API_KEY 未配置');
-    }
+    const resend = getResendClient();
 
     const emailHtml = `
         <!DOCTYPE html>

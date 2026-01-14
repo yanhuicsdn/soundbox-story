@@ -422,21 +422,38 @@ async function downloadFileFromFeishu(fileToken: string) {
         console.log('📥 开始下载文件, file_token:', fileToken);
         const accessToken = await getAccessToken();
         
-        // 步骤1: 获取临时下载链接
-        // 参考: https://open.feishu.cn/document/server-docs/docs/drive-v1/media/download
-        const getTempUrlEndpoint = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/${fileToken}/download`;
-        console.log('📍 步骤1: 获取临时下载链接');
-        console.log('URL:', getTempUrlEndpoint);
+        // 方法1: 尝试使用多维表格附件获取临时下载链接
+        // 参考: https://open.feishu.cn/document/server-docs/docs/bitable-v1/app-table-attachment/get
+        console.log('📍 方法1: 使用多维表格附件API获取临时下载链接');
+        const bitableAttachmentUrl = `${FEISHU_CONFIG.baseUrl}/bitable/v1/apps/${FEISHU_CONFIG.baseToken}/tables/${FEISHU_CONFIG.tableId}/records/attachments/${fileToken}`;
+        console.log('URL:', bitableAttachmentUrl);
         
-        const tempUrlResponse = await fetch(getTempUrlEndpoint, {
+        let tempUrlResponse = await fetch(bitableAttachmentUrl, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${accessToken}`
             }
         });
 
-        console.log('📡 响应状态:', tempUrlResponse.status, tempUrlResponse.statusText);
+        console.log('📡 方法1响应状态:', tempUrlResponse.status, tempUrlResponse.statusText);
         console.log('📋 响应头 Content-Type:', tempUrlResponse.headers.get('content-type'));
+
+        // 如果方法1失败，尝试方法2：使用 drive/medias API
+        if (!tempUrlResponse.ok) {
+            console.log('⚠️ 方法1失败，尝试方法2: 使用 drive/medias API');
+            const driveMediaUrl = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/${fileToken}/download`;
+            console.log('URL:', driveMediaUrl);
+            
+            tempUrlResponse = await fetch(driveMediaUrl, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            
+            console.log('📡 方法2响应状态:', tempUrlResponse.status, tempUrlResponse.statusText);
+            console.log('📋 响应头 Content-Type:', tempUrlResponse.headers.get('content-type'));
+        }
 
         if (!tempUrlResponse.ok) {
             const errorText = await tempUrlResponse.text();

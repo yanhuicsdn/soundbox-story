@@ -49,14 +49,12 @@ export async function GET(request: NextRequest) {
         console.log('  声音类型:', order.voiceType);
         console.log('  录音文件:', JSON.stringify(order.audioFile));
 
-        const fileToken = order.audioFile[0].file_token;
+        const audioFileObj = order.audioFile[0];
         const fileName = `${order.childName}_${order.voiceType}.webm`;
         
         console.log('📥 开始测试下载');
-        console.log('file_token 完整内容:', fileToken);
-        console.log('file_token 长度:', fileToken.length);
-        console.log('file_token 类型:', typeof fileToken);
-        console.log('audioFile 完整对象:', JSON.stringify(order.audioFile[0], null, 2));
+        console.log('audioFile 完整对象:', JSON.stringify(audioFileObj, null, 2));
+        console.log('下载URL:', audioFileObj.url);
 
         // 测试下载
         const { downloadFileFromFeishu, getAccessToken } = await import('../../../lib/feishu');
@@ -69,7 +67,8 @@ export async function GET(request: NextRequest) {
         let downloadError = null;
         
         try {
-            fileBuffer = await downloadFileFromFeishu(fileToken);
+            // 使用附件对象中的完整URL（包含extra参数）
+            fileBuffer = await downloadFileFromFeishu(audioFileObj.url);
             console.log('✅ 下载测试成功！文件大小:', fileBuffer.length, 'bytes');
         } catch (downloadErr: any) {
             downloadError = downloadErr;
@@ -84,10 +83,10 @@ export async function GET(request: NextRequest) {
                 orderId: order.orderId,
                 childName: order.childName,
                 voiceType: order.voiceType,
-                fileToken: fileToken,
-                fileTokenLength: fileToken.length,
+                fileToken: audioFileObj.file_token,
+                downloadUrl: audioFileObj.url,
                 fileName: fileName,
-                audioFileObject: order.audioFile[0],
+                audioFileObject: audioFileObj,
                 fileSize: fileBuffer ? fileBuffer.length : 0,
                 fileSizeKB: fileBuffer ? (fileBuffer.length / 1024).toFixed(2) : '0',
                 filePreview: fileBuffer ? fileBuffer.slice(0, 100).toString('hex') : null,

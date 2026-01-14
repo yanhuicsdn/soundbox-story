@@ -426,7 +426,7 @@
                                         </td>
                                         <td>
                                             ${order.audioFile && order.audioFile.length > 0 ? 
-                                                `<button class="download-btn" onclick="downloadAudio('${order.audioFile[0].file_token}', '${order.childName}_${order.voiceType}.webm')">
+                                                `<button class="download-btn" onclick='downloadAudio(${JSON.stringify(order.audioFile[0])}, "${order.childName}_${order.voiceType}.webm")'>
                                                     📥 下载
                                                 </button>` : 
                                                 '<span style="color: #999;">无</span>'
@@ -466,11 +466,12 @@
         }
 
         // 下载录音文件
-        async function downloadAudio(fileToken, fileName) {
+        async function downloadAudio(audioFileObj, fileName) {
             try {
-                console.log('📥 开始下载文件:', fileName, 'fileToken:', fileToken);
+                console.log('📥 开始下载文件:', fileName);
+                console.log('附件对象:', audioFileObj);
                 
-                const url = `/api/admin/download?fileToken=${encodeURIComponent(fileToken)}&fileName=${encodeURIComponent(fileName)}`;
+                const url = `/api/admin/download?downloadUrl=${encodeURIComponent(audioFileObj.url)}&fileName=${encodeURIComponent(fileName)}`;
                 console.log('📍 请求URL:', url);
                 
                 const response = await fetch(url, {

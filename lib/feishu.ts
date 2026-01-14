@@ -415,11 +415,12 @@ async function getAllOrders() {
 
 /**
  * 下载飞书文件
- * @param {string} fileToken - 文件token
+ * @param {string} downloadUrl - 完整的下载URL（包含extra参数）
  */
-async function downloadFileFromFeishu(fileToken: string) {
+async function downloadFileFromFeishu(downloadUrl: string) {
     try {
-        console.log('📥 开始下载文件, file_token:', fileToken);
+        console.log('📥 开始下载文件');
+        console.log('下载URL:', downloadUrl);
         const accessToken = await getAccessToken();
         
         // 使用 curl 命令下载文件（类似上传时的方式）
@@ -427,14 +428,11 @@ async function downloadFileFromFeishu(fileToken: string) {
         const { execSync } = require('child_process');
         const tmpFile = `/tmp/download_${Date.now()}.webm`;
         
-        const url = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/${fileToken}/download`;
-        
         console.log('📥 使用 curl 下载文件...');
-        console.log('URL:', url);
         console.log('临时文件路径:', tmpFile);
         
         // 构建 curl 命令，使用 -v 查看详细信息，-L 跟随重定向
-        const curlCommand = `curl -s -L -X GET '${url}' \
+        const curlCommand = `curl -s -L -X GET '${downloadUrl}' \
             -H 'Authorization: Bearer ${accessToken}' \
             -o '${tmpFile}' \
             -w '%{http_code}'`;

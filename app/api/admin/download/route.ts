@@ -17,23 +17,25 @@ export async function GET(request: NextRequest) {
             }, { status: 401 });
         }
 
-        // 获取文件token和文件名
-        const { searchParams } = new URL(request.url);
-        const fileToken = searchParams.get('fileToken');
-        const fileName = searchParams.get('fileName') || 'recording.webm';
+        // 获取查询参数
+        const searchParams = request.nextUrl.searchParams;
+        const downloadUrl = searchParams.get('downloadUrl');
+        const fileName = searchParams.get('fileName') || 'download.webm';
 
-        if (!fileToken) {
+        if (!downloadUrl) {
             return NextResponse.json({
                 success: false,
-                message: '缺少文件token'
+                message: '缺少下载URL'
             }, { status: 400 });
         }
 
-        console.log('📥 管理员请求下载文件:', fileName);
+        console.log('📥 开始下载文件');
+        console.log('下载URL:', downloadUrl);
+        console.log('文件名:', fileName);
 
-        // 从飞书下载文件
-        const { downloadFileFromFeishu } = await import('../../../../lib/feishu');
-        const fileBuffer = await downloadFileFromFeishu(fileToken);
+        // 下载文件
+        const { downloadFileFromFeishu } = await import('../../../lib/feishu');
+        const fileBuffer = await downloadFileFromFeishu(downloadUrl);
 
         console.log('✅ 文件下载成功，准备返回');
 

@@ -415,15 +415,49 @@ async function getAllOrders() {
 
 /**
  * 下载飞书文件
- * @param {string} downloadUrl - 完整的下载URL（包含extra参数）
+ * @param {string} tmpUrl - 获取临时下载链接的URL
  */
-async function downloadFileFromFeishu(downloadUrl: string) {
+async function downloadFileFromFeishu(tmpUrl: string) {
     try {
         console.log('📥 开始下载文件');
-        console.log('下载URL:', downloadUrl);
+        console.log('临时链接URL:', tmpUrl);
         const accessToken = await getAccessToken();
         
-        // 使用 curl 命令下载文件（类似上传时的方式）
+        // 步骤1: 先获取临时下载链接
+        console.log('📍 步骤1: 获取临时下载链接');
+        const response = await fetch(tmpUrl, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        console.log('📡 响应状态:', response.status, response.statusText);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ 获取临时链接失败:', errorText);
+            throw new Error(`获取临时链接失败: ${response.status} - ${errorText.substring(0, 200)}`);
+        }
+
+        const result = await response.json();
+        console.log('📦 临时链接响应:', JSON.stringify(result, null, 2));
+
+        if (result.code !== 0) {
+            throw new Error(`获取临时链接失败: code=${result.code}, msg=${result.msg}`);
+        }
+
+        // 从响应中获取临时下载URL
+        const fileTokens = Object.keys(result.data.tmp_download_urls || {});
+        if (fileTokens.length === 0) {
+            throw new Error('响应中没有临时下载链接');
+        }
+
+        const tempDownloadUrl = result.data.tmp_download_urls[fileTokens[0]];
+        console.log('📍 步骤2: 使用临时链接下载文件');
+        console.log('临时下载URL:', tempDownloadUrl);
+
+        // 步骤2: 使用临时链接下载文件（使用 curl）
         const fs = require('fs');
         const { execSync } = require('child_process');
         const tmpFile = `/tmp/download_${Date.now()}.webm`;
@@ -431,9 +465,8 @@ async function downloadFileFromFeishu(downloadUrl: string) {
         console.log('📥 使用 curl 下载文件...');
         console.log('临时文件路径:', tmpFile);
         
-        // 构建 curl 命令，使用 -v 查看详细信息，-L 跟随重定向
-        const curlCommand = `curl -s -L -X GET '${downloadUrl}' \
-            -H 'Authorization: Bearer ${accessToken}' \
+        // 构建 curl 命令
+        const curlCommand = `curl -s -L -X GET '${tempDownloadUrl}' \
             -o '${tmpFile}' \
             -w '%{http_code}'`;
         

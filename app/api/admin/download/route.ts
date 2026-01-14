@@ -19,23 +19,23 @@ export async function GET(request: NextRequest) {
 
         // 获取查询参数
         const searchParams = request.nextUrl.searchParams;
-        const downloadUrl = searchParams.get('downloadUrl');
+        const tmpUrl = searchParams.get('tmpUrl');
         const fileName = searchParams.get('fileName') || 'download.webm';
 
-        if (!downloadUrl) {
+        if (!tmpUrl) {
             return NextResponse.json({
                 success: false,
-                message: '缺少下载URL'
+                message: '缺少临时链接URL'
             }, { status: 400 });
         }
 
         console.log('📥 开始下载文件');
-        console.log('下载URL:', downloadUrl);
+        console.log('临时链接URL:', tmpUrl);
         console.log('文件名:', fileName);
 
         // 下载文件
         const { downloadFileFromFeishu } = await import('../../../lib/feishu');
-        const fileBuffer = await downloadFileFromFeishu(downloadUrl);
+        const fileBuffer = await downloadFileFromFeishu(tmpUrl);
 
         console.log('✅ 文件下载成功，准备返回');
 

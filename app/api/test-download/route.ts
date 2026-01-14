@@ -52,10 +52,19 @@ export async function GET(request: NextRequest) {
         const fileToken = order.audioFile[0].file_token;
         const fileName = `${order.childName}_${order.voiceType}.webm`;
         
-        console.log('📥 开始测试下载, file_token:', fileToken);
+        console.log('📥 开始测试下载');
+        console.log('file_token 完整内容:', fileToken);
+        console.log('file_token 长度:', fileToken.length);
+        console.log('file_token 类型:', typeof fileToken);
+        console.log('audioFile 完整对象:', JSON.stringify(order.audioFile[0], null, 2));
 
         // 测试下载
-        const { downloadFileFromFeishu } = await import('../../../lib/feishu');
+        const { downloadFileFromFeishu, getAccessToken } = await import('../../../lib/feishu');
+        
+        // 先获取 access token 用于诊断
+        const accessToken = await getAccessToken();
+        console.log('✅ Access Token 获取成功，前20字符:', accessToken.substring(0, 20) + '...');
+        
         const fileBuffer = await downloadFileFromFeishu(fileToken);
 
         console.log('✅ 下载测试成功！文件大小:', fileBuffer.length, 'bytes');

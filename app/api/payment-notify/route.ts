@@ -125,16 +125,16 @@ async function handlePaymentNotify(params: any) {
                 console.error('❌ 更新飞书表格失败:', feishuError);
             }
 
-            // 发送确认邮件（不带附件）
+            // 发送确认邮件（使用 Resend）
             try {
-                await sendConfirmationEmail({
+                const { sendOrderConfirmationEmail } = await import('../../../lib/email');
+                await sendOrderConfirmationEmail({
                     orderId: outTradeNo,
                     transactionId,
                     amount,
                     email: orderDetails.email,
                     childName: orderDetails.childName,
-                    voiceType: orderDetails.voiceType,
-                    audioFile: null  // 不发送附件
+                    voiceType: orderDetails.voiceType
                 });
                 console.log('✅ 确认邮件已发送');
             } catch (emailError) {
@@ -173,131 +173,4 @@ export async function GET(request: NextRequest) {
     return handlePaymentNotify(params);
 }
 
-async function sendConfirmationEmail(orderInfo: any) {
-    const { orderId, transactionId, amount, email, childName, voiceType, audioFile } = orderInfo;
-
-    console.log('📧 开始发送确认邮件...');
-    console.log('收件人:', email);
-    console.log('订单号:', orderId);
-    console.log('有录音附件:', !!audioFile);
-
-    if (!email) {
-        console.log('⚠️ 未提供邮箱地址，跳过邮件发送');
-        return;
-    }
-
-    const SMTP_CONFIG = {
-        host: process.env.SMTP_HOST || 'smtp.sohu.com',
-        port: parseInt(process.env.SMTP_PORT || '25'),
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    };
-
-    console.log('📮 SMTP配置:', {
-        host: SMTP_CONFIG.host,
-        port: SMTP_CONFIG.port,
-        user: SMTP_CONFIG.user ? SMTP_CONFIG.user.substring(0, 5) + '***' : '未配置'
-    });
-
-    if (!SMTP_CONFIG.user || !SMTP_CONFIG.pass) {
-        console.error('❌ SMTP 配置不完整');
-        throw new Error('SMTP 配置不完整');
-    }
-
-    console.log('🔧 创建SMTP传输器...');
-    const transporter = nodemailer.createTransport({
-        host: SMTP_CONFIG.host,
-        port: SMTP_CONFIG.port,
-        secure: false,
-        auth: {
-            user: SMTP_CONFIG.user,
-            pass: SMTP_CONFIG.pass
-        }
-    });
-
-    const mailOptions: any = {
-        from: `"声宝盒" <${SMTP_CONFIG.user}>`,
-        to: email,
-        subject: `【声宝盒】支付成功 - 订单 ${orderId}`,
-        html: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-                    .content { background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }
-                    .order-info { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
-                    .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e9ecef; }
-                    .info-row:last-child { border-bottom: none; }
-                    .label { color: #666; }
-                    .value { font-weight: 600; color: #333; }
-                    .footer { text-align: center; color: #999; font-size: 14px; margin-top: 30px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>🎉 支付成功！</h1>
-                        <p>感谢您购买声宝盒定制语音故事</p>
-                    </div>
-                    <div class="content">
-                        <p>亲爱的用户，</p>
-                        <p>您的订单已支付成功！我们将尽快为 <strong>${childName}</strong> 制作专属的 <strong>${voiceType}</strong> 语音故事。</p>
-                        
-                        <div class="order-info">
-                            <h3>📦 订单信息</h3>
-                            <div class="info-row">
-                                <span class="label">订单号</span>
-                                <span class="value">${orderId}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="label">交易号</span>
-                                <span class="value">${transactionId}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="label">支付金额</span>
-                                <span class="value">¥${amount}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="label">宝宝名字</span>
-                                <span class="value">${childName}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="label">声音类型</span>
-                                <span class="value">${voiceType}</span>
-                            </div>
-                        </div>
-
-                        <p><strong>⏰ 制作时间：</strong>我们将在 24-48 小时内完成语音故事的制作。</p>
-                        <p><strong>📧 交付方式：</strong>完成后会发送邮件到此邮箱，包含音频文件下载链接。</p>
-                        <p><strong>🎙️ 录音文件：</strong>您的录音文件已成功上传，我们会根据您的录音进行语音克隆。</p>
-                        
-                        <p style="margin-top: 30px;">如有任何问题，请随时联系我们的客服。</p>
-                        
-                        <div class="footer">
-                            <p>此邮件由系统自动发送，请勿直接回复</p>
-                            <p>© 2026 声宝盒 - 为孩子定制专属语音故事</p>
-                        </div>
-                    </div>
-                </div>
-            </body>
-            </html>
-        `
-    };
-
-    if (audioFile && audioFile.buffer) {
-        mailOptions.attachments = [{
-            filename: audioFile.filename || 'recording.wav',
-            content: audioFile.buffer,
-            contentType: audioFile.mimetype || 'audio/wav'
-        }];
-        console.log('🎙️ 录音文件已添加为邮件附件');
-    }
-
-    const result = await transporter.sendMail(mailOptions);
-    console.log('✅ 邮件发送成功:', result.messageId);
-    return result;
-}
+// 旧的 nodemailer 邮件发送函数已删除，现在使用 lib/email.ts 中的 Resend 服务

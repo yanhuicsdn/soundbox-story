@@ -11,6 +11,15 @@ function getResendClient() {
 }
 
 /**
+ * 获取发件人邮箱地址
+ * 如果配置了 RESEND_FROM_EMAIL，使用自定义域名
+ * 否则使用 Resend 测试域名（仅能发送到注册邮箱）
+ */
+function getFromEmail() {
+    return process.env.RESEND_FROM_EMAIL || 'Acme <onboarding@resend.dev>';
+}
+
+/**
  * 发送订单确认邮件
  */
 export async function sendOrderConfirmationEmail(orderInfo: {
@@ -103,13 +112,14 @@ export async function sendOrderConfirmationEmail(orderInfo: {
     `;
 
     try {
+        const fromEmail = getFromEmail();
         console.log('📤 准备发送邮件...');
-        console.log('发件人: Acme <onboarding@resend.dev>');
+        console.log('发件人:', fromEmail);
         console.log('收件人:', email);
         console.log('主题:', `【声宝盒】支付成功 - 订单 ${orderId}`);
         
         const result = await resend.emails.send({
-            from: 'Acme <onboarding@resend.dev>',  // Resend 测试域名
+            from: fromEmail,
             to: [email],
             subject: `【声宝盒】支付成功 - 订单 ${orderId}`,
             html: emailHtml
@@ -178,13 +188,14 @@ export async function sendTestEmail(email: string) {
     `;
 
     try {
+        const fromEmail = getFromEmail();
         console.log('📤 准备发送测试邮件...');
-        console.log('发件人: Acme <onboarding@resend.dev>');
+        console.log('发件人:', fromEmail);
         console.log('收件人:', email);
         console.log('主题: 【声宝盒】测试邮件 - 邮件发送功能正常');
         
         const result = await resend.emails.send({
-            from: 'Acme <onboarding@resend.dev>',  // Resend 测试域名
+            from: fromEmail,
             to: [email],
             subject: '【声宝盒】测试邮件 - 邮件发送功能正常',
             html: emailHtml

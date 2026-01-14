@@ -125,16 +125,40 @@ async function handlePaymentNotify(params: any) {
                 console.error('❌ 更新飞书表格失败:', feishuError);
             }
 
-            // 发送确认邮件（使用 Resend）
+            // 发送确认邮件（带录音附件）
             try {
                 const { sendOrderConfirmationEmail } = await import('../../../lib/email');
+                
+                // 从飞书表格获取录音文件信息
+                let audioFileUrl = undefined;
+                let audioFileName = undefined;
+                
+                try {
+                    const { getAllOrders } = await import('../../../lib/feishu');
+                    const orders = await getAllOrders();
+                    const orderRecord = orders.find((order: any) => order.orderId === outTradeNo);
+                    
+                    if (orderRecord && orderRecord.audioFile && orderRecord.audioFile.length > 0) {
+                        const audioFileObj = orderRecord.audioFile[0];
+                        audioFileUrl = audioFileObj.url;
+                        audioFileName = audioFileObj.name;
+                        console.log('📎 找到录音文件:', audioFileName);
+                    } else {
+                        console.log('⚠️ 订单中没有录音文件');
+                    }
+                } catch (fetchError) {
+                    console.error('⚠️ 获取录音文件信息失败:', fetchError);
+                }
+                
                 await sendOrderConfirmationEmail({
                     orderId: outTradeNo,
                     transactionId,
                     amount,
                     email: orderDetails.email,
                     childName: orderDetails.childName,
-                    voiceType: orderDetails.voiceType
+                    voiceType: orderDetails.voiceType,
+                    audioFileUrl,
+                    audioFileName
                 });
                 console.log('✅ 确认邮件已发送');
             } catch (emailError) {

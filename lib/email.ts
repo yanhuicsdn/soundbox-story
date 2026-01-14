@@ -55,8 +55,10 @@ export async function sendOrderConfirmationEmail(orderInfo: {
     email: string;
     childName: string;
     voiceType: string;
+    audioFileUrl?: string;
+    audioFileName?: string;
 }) {
-    const { orderId, transactionId, amount, email, childName, voiceType } = orderInfo;
+    const { orderId, transactionId, amount, email, childName, voiceType, audioFileUrl, audioFileName } = orderInfo;
 
     console.log('📧 开始发送确认邮件...');
     console.log('收件人:', email);
@@ -144,12 +146,39 @@ export async function sendOrderConfirmationEmail(orderInfo: {
         console.log('收件人:', email);
         console.log('主题:', `【声宝盒】支付成功 - 订单 ${orderId}`);
         
-        const result = await transporter.sendMail({
+        // 准备邮件选项
+        const mailOptions: any = {
             from: fromEmail,
             to: email,
             subject: `【声宝盒】支付成功 - 订单 ${orderId}`,
             html: emailHtml
-        });
+        };
+
+        // 如果有录音文件，下载并添加为附件
+        if (audioFileUrl && audioFileName) {
+            try {
+                console.log('📥 下载录音文件作为附件...');
+                console.log('文件URL:', audioFileUrl);
+                console.log('文件名:', audioFileName);
+                
+                // 动态导入 downloadFileFromFeishu 函数
+                const { downloadFileFromFeishu } = await import('./feishu');
+                const fileBuffer = await downloadFileFromFeishu(audioFileUrl);
+                
+                mailOptions.attachments = [{
+                    filename: audioFileName,
+                    content: fileBuffer,
+                    contentType: 'audio/webm'
+                }];
+                
+                console.log('✅ 录音文件已添加为附件，大小:', fileBuffer.length, 'bytes');
+            } catch (attachError: any) {
+                console.error('⚠️ 添加录音附件失败:', attachError.message);
+                console.log('📧 继续发送邮件（不带附件）');
+            }
+        }
+        
+        const result = await transporter.sendMail(mailOptions);
 
         console.log('✅ 邮件发送成功');
         console.log('邮件ID:', result.messageId);

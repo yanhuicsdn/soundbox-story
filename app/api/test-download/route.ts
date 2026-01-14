@@ -65,34 +65,44 @@ export async function GET(request: NextRequest) {
         const accessToken = await getAccessToken();
         console.log('✅ Access Token 获取成功，前20字符:', accessToken.substring(0, 20) + '...');
         
-        const fileBuffer = await downloadFileFromFeishu(fileToken);
+        let fileBuffer;
+        let downloadError = null;
+        
+        try {
+            fileBuffer = await downloadFileFromFeishu(fileToken);
+            console.log('✅ 下载测试成功！文件大小:', fileBuffer.length, 'bytes');
+        } catch (downloadErr: any) {
+            downloadError = downloadErr;
+            console.error('❌ 下载失败:', downloadErr.message);
+        }
 
-        console.log('✅ 下载测试成功！文件大小:', fileBuffer.length, 'bytes');
-
+        // 无论下载成功与否，都返回诊断信息
         return NextResponse.json({
-            success: true,
-            message: '下载测试成功',
+            success: !!fileBuffer,
+            message: fileBuffer ? '下载测试成功' : '下载测试失败',
             data: {
                 orderId: order.orderId,
                 childName: order.childName,
                 voiceType: order.voiceType,
                 fileToken: fileToken,
+                fileTokenLength: fileToken.length,
                 fileName: fileName,
-                fileSize: fileBuffer.length,
-                fileSizeKB: (fileBuffer.length / 1024).toFixed(2),
-                // 返回文件前100字节的hex，用于验证
-                filePreview: fileBuffer.slice(0, 100).toString('hex')
+                audioFileObject: order.audioFile[0],
+                fileSize: fileBuffer ? fileBuffer.length : 0,
+                fileSizeKB: fileBuffer ? (fileBuffer.length / 1024).toFixed(2) : '0',
+                filePreview: fileBuffer ? fileBuffer.slice(0, 100).toString('hex') : null,
+                error: downloadError ? downloadError.message : null
             }
-        });
+        }, { status: fileBuffer ? 200 : 500 });
 
     } catch (error: any) {
-        console.error('❌ 测试下载失败:', error);
+        console.error('❌ 测试失败:', error);
         console.error('错误详情:', error.message);
         console.error('错误堆栈:', error.stack);
         
         return NextResponse.json({
             success: false,
-            message: error.message || '测试下载失败',
+            message: error.message || '测试失败',
             error: error.toString()
         }, { status: 500 });
     }

@@ -422,58 +422,81 @@ async function downloadFileFromFeishu(fileToken: string) {
         console.log('📥 开始下载文件, file_token:', fileToken);
         const accessToken = await getAccessToken();
         
-        // 方法1: 尝试使用 bitable 附件下载 API
-        // 参考: https://open.feishu.cn/document/server-docs/docs/bitable-v1/app-table-attachment/download
-        const bitableDownloadUrl = `${FEISHU_CONFIG.baseUrl}/bitable/v1/apps/${FEISHU_CONFIG.baseToken}/tables/${FEISHU_CONFIG.tableId}/records/attachments/${fileToken}`;
-        console.log('📍 尝试方法1 - Bitable附件下载:', bitableDownloadUrl);
+        // 步骤1: 获取临时下载链接
+        // 参考: https://open.feishu.cn/document/server-docs/docs/drive-v1/media/download
+        const getTempUrlEndpoint = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/${fileToken}/download`;
+        console.log('📍 步骤1: 获取临时下载链接');
+        console.log('URL:', getTempUrlEndpoint);
         
-        let response = await fetch(bitableDownloadUrl, {
+        const tempUrlResponse = await fetch(getTempUrlEndpoint, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${accessToken}`
             }
         });
 
-        console.log('📡 方法1响应状态:', response.status, response.statusText);
+        console.log('📡 响应状态:', tempUrlResponse.status, tempUrlResponse.statusText);
+        console.log('📋 响应头 Content-Type:', tempUrlResponse.headers.get('content-type'));
 
-        // 如果方法1失败，尝试方法2：使用 drive/medias 下载
-        if (!response.ok) {
-            console.log('⚠️ 方法1失败，尝试方法2 - Drive媒体下载');
-            const driveDownloadUrl = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/${fileToken}/download`;
-            console.log('📍 方法2 URL:', driveDownloadUrl);
-            
-            response = await fetch(driveDownloadUrl, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            });
-            
-            console.log('📡 方法2响应状态:', response.status, response.statusText);
-        }
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ 下载失败响应:', errorText);
+        if (!tempUrlResponse.ok) {
+            const errorText = await tempUrlResponse.text();
+            console.error('❌ 获取临时链接失败，响应内容:', errorText);
             
             // 尝试解析错误信息
-            let errorMsg = errorText;
+            let errorJson: any = {};
             try {
-                const errorJson = JSON.parse(errorText);
-                errorMsg = `code: ${errorJson.code}, msg: ${errorJson.msg}`;
-                console.error('错误详情:', errorJson);
+                errorJson = JSON.parse(errorText);
+                console.error('错误详情:', {
+                    code: errorJson.code,
+                    msg: errorJson.msg
+                });
             } catch (e) {
-                // 忽略JSON解析错误
+                console.error('无法解析错误JSON');
             }
             
-            throw new Error(`下载失败: ${response.status} ${response.statusText} - ${errorMsg}`);
+            throw new Error(`获取临时链接失败: ${tempUrlResponse.status} - code: ${errorJson.code}, msg: ${errorJson.msg}`);
         }
 
-        // 获取文件内容
-        const buffer = await response.arrayBuffer();
-        console.log('✅ 文件下载成功，大小:', buffer.byteLength, 'bytes');
+        // 检查响应类型
+        const contentType = tempUrlResponse.headers.get('content-type') || '';
         
-        return Buffer.from(buffer);
+        // 如果返回的是JSON，说明是临时链接
+        if (contentType.includes('application/json')) {
+            console.log('📦 收到JSON响应，解析临时下载链接');
+            const result = await tempUrlResponse.json();
+            console.log('临时链接响应:', result);
+            
+            if (result.code !== 0) {
+                throw new Error(`获取临时链接失败: code=${result.code}, msg=${result.msg}`);
+            }
+            
+            // 从响应中获取临时下载URL
+            const tempDownloadUrl = result.data?.tmp_download_url;
+            if (!tempDownloadUrl) {
+                throw new Error('响应中没有临时下载链接');
+            }
+            
+            console.log('📍 步骤2: 使用临时链接下载文件');
+            console.log('临时URL:', tempDownloadUrl);
+            
+            // 使用临时链接下载文件
+            const fileResponse = await fetch(tempDownloadUrl);
+            
+            if (!fileResponse.ok) {
+                throw new Error(`下载文件失败: ${fileResponse.status} ${fileResponse.statusText}`);
+            }
+            
+            const buffer = await fileResponse.arrayBuffer();
+            console.log('✅ 文件下载成功，大小:', buffer.byteLength, 'bytes');
+            return Buffer.from(buffer);
+            
+        } else {
+            // 如果直接返回文件流
+            console.log('📦 直接收到文件流');
+            const buffer = await tempUrlResponse.arrayBuffer();
+            console.log('✅ 文件下载成功，大小:', buffer.byteLength, 'bytes');
+            return Buffer.from(buffer);
+        }
 
     } catch (error: any) {
         console.error('❌ 下载文件失败:', error);

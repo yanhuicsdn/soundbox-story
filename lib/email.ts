@@ -1,22 +1,40 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
 /**
- * 获取 Resend 客户端实例（按需初始化）
+ * 获取 SMTP 配置
  */
-function getResendClient() {
-    if (!process.env.RESEND_API_KEY) {
-        throw new Error('RESEND_API_KEY 未配置');
+function getSMTPConfig() {
+    const config = {
+        host: process.env.SMTP_HOST || 'smtp.sohu.com',
+        port: parseInt(process.env.SMTP_PORT || '25'),
+        secure: false, // 端口25使用false，465使用true
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS
+        }
+    };
+
+    if (!config.auth.user || !config.auth.pass) {
+        throw new Error('SMTP_USER 或 SMTP_PASS 未配置');
     }
-    return new Resend(process.env.RESEND_API_KEY);
+
+    return config;
+}
+
+/**
+ * 创建邮件传输器
+ */
+function createTransporter() {
+    const config = getSMTPConfig();
+    return nodemailer.createTransport(config);
 }
 
 /**
  * 获取发件人邮箱地址
- * 如果配置了 RESEND_FROM_EMAIL，使用自定义域名
- * 否则使用 Resend 测试域名（仅能发送到注册邮箱）
  */
 function getFromEmail() {
-    return process.env.RESEND_FROM_EMAIL || 'Acme <onboarding@resend.dev>';
+    const smtpUser = process.env.SMTP_USER;
+    return `声宝盒 <${smtpUser}>`;
 }
 
 /**
@@ -41,7 +59,8 @@ export async function sendOrderConfirmationEmail(orderInfo: {
         return;
     }
 
-    const resend = getResendClient();
+    const transporter = createTransporter();
+    const fromEmail = getFromEmail();
 
     const emailHtml = `
         <!DOCTYPE html>
@@ -112,21 +131,20 @@ export async function sendOrderConfirmationEmail(orderInfo: {
     `;
 
     try {
-        const fromEmail = getFromEmail();
         console.log('📤 准备发送邮件...');
         console.log('发件人:', fromEmail);
         console.log('收件人:', email);
         console.log('主题:', `【声宝盒】支付成功 - 订单 ${orderId}`);
         
-        const result = await resend.emails.send({
+        const result = await transporter.sendMail({
             from: fromEmail,
-            to: [email],
+            to: email,
             subject: `【声宝盒】支付成功 - 订单 ${orderId}`,
             html: emailHtml
         });
 
         console.log('✅ 邮件发送成功');
-        console.log('邮件ID:', result.data?.id);
+        console.log('邮件ID:', result.messageId);
         console.log('完整响应:', JSON.stringify(result, null, 2));
         return result;
     } catch (error: any) {
@@ -144,7 +162,8 @@ export async function sendTestEmail(email: string) {
     console.log('📧 开始发送测试邮件...');
     console.log('收件人:', email);
 
-    const resend = getResendClient();
+    const transporter = createTransporter();
+    const fromEmail = getFromEmail();
 
     const emailHtml = `
         <!DOCTYPE html>
@@ -188,24 +207,21 @@ export async function sendTestEmail(email: string) {
     `;
 
     try {
-        const fromEmail = getFromEmail();
         console.log('📤 准备发送测试邮件...');
         console.log('发件人:', fromEmail);
         console.log('收件人:', email);
         console.log('主题: 【声宝盒】测试邮件 - 邮件发送功能正常');
         
-        const result = await resend.emails.send({
+        const result = await transporter.sendMail({
             from: fromEmail,
-            to: [email],
+            to: email,
             subject: '【声宝盒】测试邮件 - 邮件发送功能正常',
             html: emailHtml
         });
 
         console.log('✅ 测试邮件发送成功');
-        console.log('邮件ID:', result.data?.id);
+        console.log('邮件ID:', result.messageId);
         console.log('完整响应:', JSON.stringify(result, null, 2));
-        console.log('⚠️ 提示: 使用 onboarding@resend.dev 测试域名发送的邮件可能被放入垃圾邮件箱');
-        console.log('⚠️ 建议: 在 Resend 控制台验证自己的域名以提高送达率');
         return result;
     } catch (error: any) {
         console.error('❌ 测试邮件发送失败');

@@ -31,12 +31,18 @@ export async function GET(request: NextRequest) {
         console.log('📧 开始测试邮件发送...');
         console.log('测试邮箱:', testEmail);
 
-        // 检查 Resend API Key 配置
-        if (!process.env.RESEND_API_KEY) {
+        // 检查 SMTP 配置
+        if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
             return NextResponse.json({
                 success: false,
-                message: 'RESEND_API_KEY 未配置',
-                hint: '请在 Vercel 环境变量中配置 RESEND_API_KEY'
+                message: 'SMTP 配置不完整',
+                hint: '请在 Vercel 环境变量中配置 SMTP_USER 和 SMTP_PASS',
+                config: {
+                    SMTP_HOST: process.env.SMTP_HOST || 'smtp.sohu.com',
+                    SMTP_PORT: process.env.SMTP_PORT || '25',
+                    SMTP_USER_configured: !!process.env.SMTP_USER,
+                    SMTP_PASS_configured: !!process.env.SMTP_PASS
+                }
             }, { status: 500 });
         }
 
@@ -47,7 +53,7 @@ export async function GET(request: NextRequest) {
             success: true,
             message: '测试邮件发送成功',
             data: {
-                id: result.data?.id,
+                messageId: result.messageId,
                 recipient: testEmail,
                 timestamp: new Date().toISOString()
             }

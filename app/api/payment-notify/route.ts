@@ -112,13 +112,17 @@ async function handlePaymentNotify(params: any) {
                 console.warn('⚠️ 未收到录音文件数据');
             }
 
-            // 保存订单到飞书表格
+            // 更新订单状态到飞书表格
             try {
-                const { saveOrderToFeishu } = await import('../../../lib/feishu');
-                await saveOrderToFeishu(orderData);
-                console.log('✅ 订单已保存到飞书表格');
+                const { updateOrderInFeishu } = await import('../../../lib/feishu');
+                await updateOrderInFeishu(outTradeNo, {
+                    transactionId,
+                    amount,
+                    status: '已支付'
+                });
+                console.log('✅ 订单状态已更新到飞书表格');
             } catch (feishuError) {
-                console.error('❌ 保存到飞书表格失败:', feishuError);
+                console.error('❌ 更新飞书表格失败:', feishuError);
             }
 
             // 发送确认邮件

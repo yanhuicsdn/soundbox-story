@@ -249,8 +249,123 @@ async function saveOrderToFeishu(orderData) {
     }
 }
 
+/**
+ * 根据订单号查找记录
+ * @param {string} orderId - 订单号
+ */
+async function findRecordByOrderId(orderId) {
+    try {
+        console.log('🔍 查找订单记录:', orderId);
+        const accessToken = await getAccessToken();
+        
+        // 使用筛选条件查询
+        const url = `${FEISHU_CONFIG.baseUrl}/bitable/v1/apps/${FEISHU_CONFIG.baseToken}/tables/${FEISHU_CONFIG.tableId}/records/search`;
+        
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                field_names: ['订单号', '支付状态', 'record_id'],
+                filter: {
+                    conjunction: 'and',
+                    conditions: [{
+                        field_name: '订单号',
+                        operator: 'is',
+                        value: [orderId]
+                    }]
+                }
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.code !== 0) {
+            console.error('❌ 查询记录失败:', result);
+            return null;
+        }
+
+        if (result.data.items && result.data.items.length > 0) {
+            console.log('✅ 找到订单记录, record_id:', result.data.items[0].record_id);
+            return result.data.items[0];
+        }
+
+        console.log('⚠️ 未找到订单记录:', orderId);
+        return null;
+
+    } catch (error) {
+        console.error('❌ 查找订单记录失败:', error);
+        return null;
+    }
+}
+
+/**
+ * 更新飞书表格中的订单记录
+ * @param {string} orderId - 订单号
+ * @param {Object} updateData - 要更新的数据
+ */
+async function updateOrderInFeishu(orderId, updateData) {
+    try {
+        console.log('📝 开始更新订单记录:', orderId);
+        
+        // 先查找记录
+        const existingRecord = await findRecordByOrderId(orderId);
+        
+        if (!existingRecord) {
+            console.log('⚠️ 未找到现有记录，将创建新记录');
+            return await saveOrderToFeishu({ orderId, ...updateData });
+        }
+
+        const recordId = existingRecord.record_id;
+        console.log('📌 找到记录ID:', recordId);
+        
+        // 获取访问令牌
+        const accessToken = await getAccessToken();
+        
+        // 构建更新数据
+        const updateFields = {} as any;
+        
+        if (updateData.transactionId) updateFields['交易号'] = updateData.transactionId;
+        if (updateData.amount) updateFields['支付金额'] = parseFloat(updateData.amount);
+        if (updateData.status) updateFields['支付状态'] = updateData.status;
+        
+        console.log('📝 准备更新的字段:', Object.keys(updateFields));
+        
+        // 更新记录
+        const url = `${FEISHU_CONFIG.baseUrl}/bitable/v1/apps/${FEISHU_CONFIG.baseToken}/tables/${FEISHU_CONFIG.tableId}/records/${recordId}`;
+        
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fields: updateFields
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.code !== 0) {
+            console.error('❌ 更新记录失败:', result);
+            throw new Error(`更新失败: ${result.msg}`);
+        }
+
+        console.log('✅ 订单记录已更新');
+        return result.data.record;
+
+    } catch (error) {
+        console.error('❌ 更新订单记录失败:', error);
+        throw error;
+    }
+}
+
 export {
     saveOrderToFeishu,
+    updateOrderInFeishu,
     getAccessToken,
     createTableFields,
     uploadFileToFeishu

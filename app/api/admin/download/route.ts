@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         console.log('文件名:', fileName);
 
         // 下载文件
-        const { downloadFileFromFeishu } = await import('../../../lib/feishu');
+        const { downloadFileFromFeishu } = await import('../../../../lib/feishu');
         const fileBuffer = await downloadFileFromFeishu(downloadUrl);
 
         console.log('✅ 文件下载成功，准备返回');

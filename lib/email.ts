@@ -4,10 +4,11 @@ import nodemailer from 'nodemailer';
  * 获取 SMTP 配置
  */
 function getSMTPConfig() {
+    const port = parseInt(process.env.SMTP_PORT || '25');
     const config = {
         host: process.env.SMTP_HOST || 'smtp.sohu.com',
-        port: parseInt(process.env.SMTP_PORT || '25'),
-        secure: false, // 端口25使用false，465使用true
+        port: port,
+        secure: port === 465, // 端口465使用SSL，其他端口使用false
         auth: {
             user: process.env.SMTP_USER,
             pass: process.env.SMTP_PASS
@@ -17,6 +18,13 @@ function getSMTPConfig() {
     if (!config.auth.user || !config.auth.pass) {
         throw new Error('SMTP_USER 或 SMTP_PASS 未配置');
     }
+
+    console.log('📮 SMTP配置:', {
+        host: config.host,
+        port: config.port,
+        secure: config.secure,
+        user: config.auth.user
+    });
 
     return config;
 }

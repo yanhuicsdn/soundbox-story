@@ -363,9 +363,94 @@ async function updateOrderInFeishu(orderId, updateData) {
     }
 }
 
+/**
+ * 获取所有订单记录（管理员用）
+ */
+async function getAllOrders() {
+    try {
+        console.log('📊 开始获取所有订单记录...');
+        const accessToken = await getAccessToken();
+        
+        const url = `${FEISHU_CONFIG.baseUrl}/bitable/v1/apps/${FEISHU_CONFIG.baseToken}/tables/${FEISHU_CONFIG.tableId}/records`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+        
+        if (result.code !== 0) {
+            console.error('❌ 获取订单列表失败:', result);
+            throw new Error(`获取失败: ${result.msg}`);
+        }
+
+        // 格式化订单数据
+        const orders = result.data.items.map((item: any) => ({
+            recordId: item.record_id,
+            orderId: item.fields['订单号'],
+            transactionId: item.fields['交易号'],
+            amount: item.fields['支付金额'],
+            productName: item.fields['商品名称'],
+            childName: item.fields['宝宝名字'],
+            voiceType: item.fields['声音类型'],
+            email: item.fields['用户邮箱'],
+            status: item.fields['支付状态'],
+            audioFile: item.fields['录音文件'],
+            createdTime: item.created_time,
+            modifiedTime: item.last_modified_time
+        }));
+
+        console.log('✅ 成功获取', orders.length, '条订单');
+        return orders;
+
+    } catch (error) {
+        console.error('❌ 获取所有订单失败:', error);
+        throw error;
+    }
+}
+
+/**
+ * 下载飞书文件
+ * @param {string} fileToken - 文件token
+ */
+async function downloadFileFromFeishu(fileToken: string) {
+    try {
+        console.log('📥 开始下载文件, file_token:', fileToken);
+        const accessToken = await getAccessToken();
+        
+        const url = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/${fileToken}/download`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`下载失败: ${response.statusText}`);
+        }
+
+        const buffer = await response.arrayBuffer();
+        console.log('✅ 文件下载成功，大小:', buffer.byteLength, 'bytes');
+        
+        return Buffer.from(buffer);
+
+    } catch (error) {
+        console.error('❌ 下载文件失败:', error);
+        throw error;
+    }
+}
+
 export {
     saveOrderToFeishu,
     updateOrderInFeishu,
+    getAllOrders,
+    downloadFileFromFeishu,
     getAccessToken,
     createTableFields,
     uploadFileToFeishu

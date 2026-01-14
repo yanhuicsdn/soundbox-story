@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单管理 - 声宝盒</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 400px;
+            margin: 100px auto;
+        }
+
+        .login-box h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .orders-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h2 {
+            margin: 0;
+        }
+
+        .refresh-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .refresh-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f8f9fa;
+        }
+
+        th {
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        td {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status.paid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .download-btn {
+            background: #667eea;
+            color: white;
+            padding: 6px 15px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #5568d3;
+        }
+
+        .download-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-left: 10px;
+            transition: all 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录界面 -->
+    <div id="login-section" class="login-box">
+        <h2>🔐 管理员登录</h2>
+        <form id="login-form">
+            <div class="form-group">
+                <label for="password">管理员密码</label>
+                <input type="password" id="password" placeholder="请输入管理员密码" required>
+            </div>
+            <button type="submit" class="btn">登录</button>
+        </form>
+    </div>
+
+    <!-- 管理界面 -->
+    <div id="admin-section" style="display: none;">
+        <div class="container">
+            <div class="header">
+                <h1>📊 订单管理系统</h1>
+                <p>声宝盒 - 管理员后台</p>
+            </div>
+
+            <div class="stats" id="stats">
+                <div class="stat-card">
+                    <h3>总订单数</h3>
+                    <div class="number" id="total-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>已支付</h3>
+                    <div class="number" id="paid-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>待支付</h3>
+                    <div class="number" id="pending-orders">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>总金额</h3>
+                    <div class="number" id="total-amount">¥0</div>
+                </div>
+            </div>
+
+            <div class="orders-table">
+                <div class="table-header">
+                    <h2>订单列表</h2>
+                    <div>
+                        <button class="refresh-btn" onclick="loadOrders()">🔄 刷新</button>
+                        <button class="logout-btn" onclick="logout()">退出登录</button>
+                    </div>
+                </div>
+                <div id="table-content">
+                    <div class="loading">加载中...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let adminPassword = '';
+
+        // 登录
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            adminPassword = document.getElementById('password').value;
+            
+            // 尝试获取订单列表来验证密码
+            fetch('/api/admin/orders', {
+                headers: {
+                    'Authorization': `Bearer ${adminPassword}`
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('admin-section').style.display = 'block';
+                    loadOrders();
+                } else {
+                    alert('密码错误');
+                }
+            })
+            .catch(err => {
+                alert('登录失败: ' + err.message);
+            });
+        });
+
+        // 退出登录
+        function logout() {
+            adminPassword = '';
+            document.getElementById('login-section').style.display = 'block';
+            document.getElementById('admin-section').style.display = 'none';
+            document.getElementById('password').value = '';
+        }
+
+        // 加载订单列表
+        async function loadOrders() {
+            const tableContent = document.getElementById('table-content');
+            tableContent.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                const response = await fetch('/api/admin/orders', {
+                    headers: {
+                        'Authorization': `Bearer ${adminPassword}`
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message);
+                }
+
+                const orders = result.data;
+                
+                // 更新统计数据
+                updateStats(orders);
+
+                // 渲染表格
+                if (orders.length === 0) {
+                    tableContent.innerHTML = `
+                        <div class="empty-state">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path>
+                            </svg>
+                            <h3>暂无订单</h3>
+                            <p>还没有任何订单记录</p>
+                        </div>
+                    `;
+                } else {
+                    tableContent.innerHTML = `
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>订单号</th>
+                                    <th>宝宝名字</th>
+                                    <th>声音类型</th>
+                                    <th>邮箱</th>
+                                    <th>商品</th>
+                                    <th>金额</th>
+                                    <th>状态</th>
+                                    <th>录音文件</th>
+                                    <th>创建时间</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${orders.map(order => `
+                                    <tr>
+                                        <td><strong>${order.orderId || '-'}</strong></td>
+                                        <td>${order.childName || '-'}</td>
+                                        <td>${order.voiceType || '-'}</td>
+                                        <td>${order.email || '-'}</td>
+                                        <td>${order.productName || '-'}</td>
+                                        <td><strong>¥${order.amount || '0'}</strong></td>
+                                        <td>
+                                            <span class="status ${order.status === '已支付' ? 'paid' : 'pending'}">
+                                                ${order.status || '待支付'}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            ${order.audioFile && order.audioFile.length > 0 ? 
+                                                `<button class="download-btn" onclick="downloadAudio('${order.audioFile[0].file_token}', '${order.childName}_${order.voiceType}.webm')">
+                                                    📥 下载
+                                                </button>` : 
+                                                '<span style="color: #999;">无</span>'
+                                            }
+                                        </td>
+                                        <td>${formatDate(order.createdTime)}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                }
+
+            } catch (error) {
+                console.error('加载订单失败:', error);
+                tableContent.innerHTML = `
+                    <div class="error">
+                        ❌ 加载失败: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 更新统计数据
+        function updateStats(orders) {
+            const total = orders.length;
+            const paid = orders.filter(o => o.status === '已支付').length;
+            const pending = orders.filter(o => o.status === '待支付').length;
+            const totalAmount = orders
+                .filter(o => o.status === '已支付')
+                .reduce((sum, o) => sum + (parseFloat(o.amount) || 0), 0);
+
+            document.getElementById('total-orders').textContent = total;
+            document.getElementById('paid-orders').textContent = paid;
+            document.getElementById('pending-orders').textContent = pending;
+            document.getElementById('total-amount').textContent = '¥' + totalAmount.toFixed(2);
+        }
+
+        // 下载录音文件
+        async function downloadAudio(fileToken, fileName) {
+            try {
+                const url = `/api/admin/download?fileToken=${fileToken}&fileName=${encodeURIComponent(fileName)}`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${adminPassword}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('下载失败');
+                }
+
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(downloadUrl);
+                document.body.removeChild(a);
+
+                console.log('✅ 文件下载成功');
+            } catch (error) {
+                console.error('下载失败:', error);
+                alert('下载失败: ' + error.message);
+            }
+        }
+
+        // 格式化日期
+        function formatDate(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    </script>
+</body>
+</html>

@@ -103,6 +103,11 @@ export async function sendOrderConfirmationEmail(orderInfo: {
     `;
 
     try {
+        console.log('📤 准备发送邮件...');
+        console.log('发件人: Acme <onboarding@resend.dev>');
+        console.log('收件人:', email);
+        console.log('主题:', `【声宝盒】支付成功 - 订单 ${orderId}`);
+        
         const result = await resend.emails.send({
             from: 'Acme <onboarding@resend.dev>',  // Resend 测试域名
             to: [email],
@@ -110,10 +115,14 @@ export async function sendOrderConfirmationEmail(orderInfo: {
             html: emailHtml
         });
 
-        console.log('✅ 邮件发送成功:', result);
+        console.log('✅ 邮件发送成功');
+        console.log('邮件ID:', result.data?.id);
+        console.log('完整响应:', JSON.stringify(result, null, 2));
         return result;
     } catch (error: any) {
-        console.error('❌ 邮件发送失败:', error);
+        console.error('❌ 邮件发送失败');
+        console.error('错误信息:', error.message);
+        console.error('错误详情:', JSON.stringify(error, null, 2));
         throw error;
     }
 }
@@ -169,6 +178,11 @@ export async function sendTestEmail(email: string) {
     `;
 
     try {
+        console.log('📤 准备发送测试邮件...');
+        console.log('发件人: Acme <onboarding@resend.dev>');
+        console.log('收件人:', email);
+        console.log('主题: 【声宝盒】测试邮件 - 邮件发送功能正常');
+        
         const result = await resend.emails.send({
             from: 'Acme <onboarding@resend.dev>',  // Resend 测试域名
             to: [email],
@@ -176,10 +190,16 @@ export async function sendTestEmail(email: string) {
             html: emailHtml
         });
 
-        console.log('✅ 测试邮件发送成功:', result);
+        console.log('✅ 测试邮件发送成功');
+        console.log('邮件ID:', result.data?.id);
+        console.log('完整响应:', JSON.stringify(result, null, 2));
+        console.log('⚠️ 提示: 使用 onboarding@resend.dev 测试域名发送的邮件可能被放入垃圾邮件箱');
+        console.log('⚠️ 建议: 在 Resend 控制台验证自己的域名以提高送达率');
         return result;
     } catch (error: any) {
-        console.error('❌ 测试邮件发送失败:', error);
+        console.error('❌ 测试邮件发送失败');
+        console.error('错误信息:', error.message);
+        console.error('错误详情:', JSON.stringify(error, null, 2));
         throw error;
     }
 }

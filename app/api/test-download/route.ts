@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
         console.log('使用 url 字段:', audioFileObj.url);
 
         // 测试下载
-        const { downloadFileFromFeishu, getAccessToken } = await import('../../../../lib/feishu');
+        const { downloadFileFromFeishu, getAccessToken } = await import('../../../lib/feishu');
         
         // 先获取 access token 用于诊断
         const accessToken = await getAccessToken();

@@ -440,21 +440,24 @@ async function downloadFileFromFeishu(fileToken: string) {
 
         if (!tempUrlResponse.ok) {
             const errorText = await tempUrlResponse.text();
-            console.error('❌ 获取临时链接失败，响应内容:', errorText);
+            console.error('❌ 获取临时链接失败');
+            console.error('响应状态:', tempUrlResponse.status, tempUrlResponse.statusText);
+            console.error('响应内容（原始）:', errorText);
+            console.error('响应内容长度:', errorText.length);
             
             // 尝试解析错误信息
             let errorJson: any = {};
+            let errorMsg = errorText;
             try {
                 errorJson = JSON.parse(errorText);
-                console.error('错误详情:', {
-                    code: errorJson.code,
-                    msg: errorJson.msg
-                });
+                console.error('解析后的JSON:', JSON.stringify(errorJson, null, 2));
+                errorMsg = `code: ${errorJson.code}, msg: ${errorJson.msg}`;
             } catch (e) {
-                console.error('无法解析错误JSON');
+                console.error('无法解析为JSON，使用原始文本');
+                errorMsg = errorText.substring(0, 200); // 只取前200字符
             }
             
-            throw new Error(`获取临时链接失败: ${tempUrlResponse.status} - code: ${errorJson.code}, msg: ${errorJson.msg}`);
+            throw new Error(`获取临时链接失败: ${tempUrlResponse.status} - ${errorMsg}`);
         }
 
         // 检查响应类型

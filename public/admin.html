@@ -426,7 +426,7 @@
                                         </td>
                                         <td>
                                             ${order.audioFile && order.audioFile.length > 0 ? 
-                                                `<button class="download-btn" onclick='downloadAudio(${JSON.stringify(order.audioFile[0])}, "${order.childName}_${order.voiceType}.webm")'>
+                                                `<button class="download-btn" onclick='downloadAudio(${JSON.stringify(order.audioFile[0])}, "${order.audioFile[0].name}")'>
                                                     📥 下载
                                                 </button>` : 
                                                 '<span style="color: #999;">无</span>'

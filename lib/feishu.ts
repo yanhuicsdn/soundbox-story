@@ -422,25 +422,40 @@ async function downloadFileFromFeishu(fileToken: string) {
         console.log('📥 开始下载文件, file_token:', fileToken);
         const accessToken = await getAccessToken();
         
-        const url = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/${fileToken}/download`;
-        console.log('📍 下载URL:', url);
+        // 步骤1: 先获取临时下载链接
+        // 参考: https://open.feishu.cn/document/server-docs/docs/bitable-v1/app-table-attachment/download
+        const getTempUrlEndpoint = `${FEISHU_CONFIG.baseUrl}/drive/v1/medias/${fileToken}/download`;
+        console.log('📍 获取临时下载链接:', getTempUrlEndpoint);
         
-        const response = await fetch(url, {
+        const tempUrlResponse = await fetch(getTempUrlEndpoint, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${accessToken}`
             }
         });
 
-        console.log('📡 响应状态:', response.status, response.statusText);
+        console.log('📡 临时链接响应状态:', tempUrlResponse.status, tempUrlResponse.statusText);
 
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('❌ 下载失败响应:', errorText);
-            throw new Error(`下载失败: ${response.status} ${response.statusText} - ${errorText}`);
+        if (!tempUrlResponse.ok) {
+            const errorText = await tempUrlResponse.text();
+            console.error('❌ 获取临时链接失败:', errorText);
+            
+            // 尝试解析错误信息
+            let errorMsg = errorText;
+            try {
+                const errorJson = JSON.parse(errorText);
+                errorMsg = `code: ${errorJson.code}, msg: ${errorJson.msg}`;
+                console.error('错误详情:', errorJson);
+            } catch (e) {
+                // 忽略JSON解析错误
+            }
+            
+            throw new Error(`获取临时链接失败: ${tempUrlResponse.status} ${tempUrlResponse.statusText} - ${errorMsg}`);
         }
 
-        const buffer = await response.arrayBuffer();
+        // 步骤2: 直接从响应中获取文件内容
+        // 飞书的 /download 接口直接返回文件流
+        const buffer = await tempUrlResponse.arrayBuffer();
         console.log('✅ 文件下载成功，大小:', buffer.byteLength, 'bytes');
         
         return Buffer.from(buffer);

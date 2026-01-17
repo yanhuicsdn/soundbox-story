@@ -359,6 +359,25 @@ async function updateOrderInFeishu(orderId, updateData) {
         if (updateData.downloadUrl) updateFields['下载链接'] = updateData.downloadUrl;
         if (updateData.storyError) updateFields['错误信息'] = updateData.storyError;
         
+        // 如果有录音文件，上传到飞书并添加到附件字段
+        if (updateData.audioFile && updateData.audioFile.buffer) {
+            try {
+                console.log('🎙️ 上传录音文件到飞书...');
+                const fileToken = await uploadFileToFeishu(
+                    updateData.audioFile.buffer,
+                    updateData.audioFile.filename
+                );
+                
+                // 使用附件字段格式：数组包含对象
+                updateFields['录音文件'] = [{
+                    file_token: fileToken
+                }];
+                console.log('✅ 录音文件已上传，file_token:', fileToken);
+            } catch (uploadError) {
+                console.error('❌ 上传录音文件失败:', uploadError);
+            }
+        }
+        
         console.log('📝 准备更新的字段:', Object.keys(updateFields));
         
         // 更新记录

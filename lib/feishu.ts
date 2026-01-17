@@ -179,6 +179,7 @@ async function uploadFileToFeishu(fileBuffer, fileName) {
 async function saveOrderToFeishu(orderData) {
     try {
         console.log('📊 开始保存订单到飞书表格...');
+        console.log('📦 接收到的 orderData:', JSON.stringify(orderData, null, 2));
         
         // 获取访问令牌
         const accessToken = await getAccessToken();

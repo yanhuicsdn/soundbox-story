@@ -87,12 +87,23 @@ async function handlePaymentNotify(params: any) {
                 orderId: outTradeNo,
                 transactionId,
                 amount,
-                productName: orderDetails.productName,
-                childName: orderDetails.childName,
-                voiceType: orderDetails.voiceType,
-                email: orderDetails.email,
+                productName: orderDetails.productName || '未知产品',
+                childName: orderDetails.childName || '未知',
+                voiceType: orderDetails.voiceType || '未知',
+                email: orderDetails.email || '',
                 status: '已支付'
             };
+            
+            console.log('📦 准备的订单数据:', {
+                orderId: orderData.orderId,
+                transactionId: orderData.transactionId,
+                amount: orderData.amount,
+                productName: orderData.productName,
+                childName: orderData.childName,
+                voiceType: orderData.voiceType,
+                email: orderData.email,
+                status: orderData.status
+            });
 
             // 如果有录音文件，解码并添加到订单数据
             if (orderDetails.audioFileBase64 && orderDetails.audioFileName) {

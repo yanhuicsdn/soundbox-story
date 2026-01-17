@@ -181,6 +181,17 @@ async function saveOrderToFeishu(orderData) {
         console.log('📊 开始保存订单到飞书表格...');
         console.log('📦 接收到的 orderData:', JSON.stringify(orderData, null, 2));
         
+        // 先查找是否已存在该订单
+        const existingRecord = await findRecordByOrderId(orderData.orderId);
+        
+        if (existingRecord) {
+            console.log('📌 订单已存在，更新订单信息');
+            // 如果订单已存在，更新它
+            return await updateOrderInFeishu(orderData.orderId, orderData);
+        }
+        
+        console.log('📝 订单不存在，创建新订单');
+        
         // 获取访问令牌
         const accessToken = await getAccessToken();
         
@@ -333,9 +344,14 @@ async function updateOrderInFeishu(orderId, updateData) {
         // 构建更新数据
         const updateFields = {} as any;
         
+        // 基本订单信息
         if (updateData.transactionId) updateFields['交易号'] = updateData.transactionId;
         if (updateData.amount) updateFields['支付金额'] = parseFloat(updateData.amount);
         if (updateData.status) updateFields['支付状态'] = updateData.status;
+        if (updateData.productName) updateFields['商品名称'] = updateData.productName;
+        if (updateData.childName) updateFields['宝宝名字'] = updateData.childName;
+        if (updateData.voiceType) updateFields['声音类型'] = updateData.voiceType;
+        if (updateData.email) updateFields['用户邮箱'] = updateData.email;
         
         // 故事生成相关字段
         if (updateData.taskId) updateFields['任务ID'] = updateData.taskId;

@@ -319,8 +319,8 @@ async function updateOrderInFeishu(orderId, updateData) {
         const existingRecord = await findRecordByOrderId(orderId);
         
         if (!existingRecord) {
-            console.log('⚠️ 未找到现有记录，将创建新记录');
-            return await saveOrderToFeishu({ orderId, ...updateData });
+            console.error('❌ 未找到订单记录:', orderId);
+            throw new Error(`订单 ${orderId} 不存在`);
         }
 
         const recordId = existingRecord.record_id;

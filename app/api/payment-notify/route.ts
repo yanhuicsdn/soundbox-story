@@ -112,17 +112,26 @@ async function handlePaymentNotify(params: any) {
                 console.warn('⚠️ 未收到录音文件数据');
             }
 
-            // 更新订单状态到飞书表格
+            // 保存/更新订单到飞书表格
             try {
-                const { updateOrderInFeishu } = await import('../../../lib/feishu');
-                await updateOrderInFeishu(outTradeNo, {
-                    transactionId,
-                    amount,
-                    status: '已支付'
-                });
-                console.log('✅ 订单状态已更新到飞书表格');
+                const { saveOrderToFeishu, updateOrderInFeishu } = await import('../../../lib/feishu');
+                
+                // 尝试更新订单，如果不存在则创建完整订单
+                try {
+                    await updateOrderInFeishu(outTradeNo, {
+                        transactionId,
+                        amount,
+                        status: '已支付'
+                    });
+                    console.log('✅ 订单状态已更新到飞书表格');
+                } catch (updateError) {
+                    // 如果更新失败，创建完整的订单记录
+                    console.log('⚠️ 更新失败，创建新订单记录');
+                    await saveOrderToFeishu(orderData);
+                    console.log('✅ 新订单已创建到飞书表格');
+                }
             } catch (feishuError) {
-                console.error('❌ 更新飞书表格失败:', feishuError);
+                console.error('❌ 飞书表格操作失败:', feishuError);
             }
 
             // 调用故事生成 API

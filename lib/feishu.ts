@@ -60,7 +60,12 @@ async function createTableFields() {
             { field_name: '支付状态', type: 1 }, // 文本
             { field_name: '支付时间', type: 5 }, // 日期
             { field_name: '创建时间', type: 5 }, // 日期
-            { field_name: '录音文件', type: 17 } // 附件
+            { field_name: '录音文件', type: 17 }, // 附件
+            // 故事生成相关字段
+            { field_name: '任务ID', type: 1 }, // 文本 - taskId
+            { field_name: '故事状态', type: 3, property: { options: [{ name: '生成中' }, { name: '生成完成' }, { name: '生成失败' }] } }, // 单选
+            { field_name: '下载链接', type: 15 }, // URL
+            { field_name: '错误信息', type: 1 } // 文本
         ];
 
         const url = `${FEISHU_CONFIG.baseUrl}/bitable/v1/apps/${FEISHU_CONFIG.baseToken}/tables/${FEISHU_CONFIG.tableId}/fields`;
@@ -331,6 +336,12 @@ async function updateOrderInFeishu(orderId, updateData) {
         if (updateData.amount) updateFields['支付金额'] = parseFloat(updateData.amount);
         if (updateData.status) updateFields['支付状态'] = updateData.status;
         
+        // 故事生成相关字段
+        if (updateData.taskId) updateFields['任务ID'] = updateData.taskId;
+        if (updateData.storyStatus) updateFields['故事状态'] = updateData.storyStatus;
+        if (updateData.downloadUrl) updateFields['下载链接'] = updateData.downloadUrl;
+        if (updateData.storyError) updateFields['错误信息'] = updateData.storyError;
+        
         console.log('📝 准备更新的字段:', Object.keys(updateFields));
         
         // 更新记录
@@ -400,6 +411,11 @@ async function getAllOrders() {
             email: item.fields['用户邮箱'],
             status: item.fields['支付状态'],
             audioFile: item.fields['录音文件'],
+            // 故事生成相关字段
+            taskId: item.fields['任务ID'],
+            storyStatus: item.fields['故事状态'],
+            downloadUrl: item.fields['下载链接'],
+            storyError: item.fields['错误信息'],
             createdTime: item.created_time,
             modifiedTime: item.last_modified_time
         }));
@@ -468,6 +484,90 @@ async function downloadFileFromFeishu(downloadUrl: string) {
     }
 }
 
+/**
+ * 根据任务ID更新故事生成状态
+ * @param {string} taskId - 故事生成任务ID
+ * @param {Object} updates - 要更新的数据
+ */
+async function updateTaskStatus(taskId: string, updates: {
+    status?: string;
+    downloadUrl?: string;
+    error?: string;
+}) {
+    try {
+        console.log('📝 开始更新任务状态:', taskId);
+        console.log('更新内容:', updates);
+        
+        // 获取所有订单，找到对应的任务
+        const orders = await getAllOrders();
+        const order = orders.find((o: any) => o.taskId === taskId);
+        
+        if (!order || !order.recordId) {
+            console.error('❌ 未找到对应的订单记录，taskId:', taskId);
+            throw new Error(`未找到任务ID为 ${taskId} 的订单`);
+        }
+
+        console.log('✅ 找到订单记录:', order.orderId, 'recordId:', order.recordId);
+        
+        // 获取访问令牌
+        const accessToken = await getAccessToken();
+        
+        // 构建更新字段
+        const updateFields: any = {};
+        
+        if (updates.status) {
+            updateFields['故事状态'] = updates.status;
+            console.log('更新故事状态:', updates.status);
+        }
+        
+        if (updates.downloadUrl) {
+            updateFields['下载链接'] = updates.downloadUrl;
+            console.log('更新下载链接:', updates.downloadUrl);
+        }
+        
+        if (updates.error) {
+            updateFields['错误信息'] = updates.error;
+            console.log('更新错误信息:', updates.error);
+        }
+
+        if (Object.keys(updateFields).length === 0) {
+            console.log('⚠️ 没有需要更新的字段');
+            return;
+        }
+
+        console.log('📝 准备更新的字段:', Object.keys(updateFields));
+        
+        // 更新记录
+        const url = `${FEISHU_CONFIG.baseUrl}/bitable/v1/apps/${FEISHU_CONFIG.baseToken}/tables/${FEISHU_CONFIG.tableId}/records/${order.recordId}`;
+        
+        const response = await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                fields: updateFields
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.code !== 0) {
+            console.error('❌ 更新任务状态失败:', result);
+            throw new Error(`更新失败: ${result.msg}`);
+        }
+
+        console.log('✅ 任务状态已更新');
+        return result.data.record;
+
+    } catch (error: any) {
+        console.error('❌ 更新任务状态失败:', error);
+        console.error('错误详情:', error.message);
+        throw error;
+    }
+}
+
 export {
     saveOrderToFeishu,
     updateOrderInFeishu,
@@ -475,5 +575,6 @@ export {
     downloadFileFromFeishu,
     getAccessToken,
     createTableFields,
-    uploadFileToFeishu
+    uploadFileToFeishu,
+    updateTaskStatus
 };

@@ -267,3 +267,102 @@ export async function sendTestEmail(email: string) {
         throw error;
     }
 }
+
+/**
+ * 发送故事生成完成通知邮件
+ */
+export async function sendStoryCompletedEmail(params: {
+    email: string;
+    childName: string;
+    downloadUrl: string;
+    orderId: string;
+}) {
+    const { email, childName, downloadUrl, orderId } = params;
+
+    console.log('📧 发送故事完成通知邮件...');
+    console.log('收件人:', email);
+
+    const transporter = createTransporter();
+    const fromEmail = getFromEmail();
+
+    const emailHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+                .button { display: inline-block; background: #FF6B6B; color: white; padding: 15px 40px; text-decoration: none; border-radius: 25px; margin: 20px 0; font-weight: bold; }
+                .footer { text-align: center; margin-top: 30px; color: #666; font-size: 14px; }
+                .info-box { background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #FF6B6B; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🎉 ${childName}的专属故事已生成！</h1>
+                </div>
+                <div class="content">
+                    <p>亲爱的家长，您好！</p>
+                    
+                    <p>好消息！为<strong>${childName}</strong>定制的专属故事已经生成完成啦！</p>
+                    
+                    <p>现在您可以下载故事音频，让孩子享受您声音讲述的温暖故事了。</p>
+                    
+                    <div style="text-align: center;">
+                        <a href="${downloadUrl}" class="button">立即下载故事</a>
+                    </div>
+                    
+                    <div class="info-box">
+                        <p><strong>📋 订单信息：</strong></p>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>订单号：${orderId}</li>
+                            <li>孩子姓名：${childName}</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="info-box">
+                        <p><strong>💡 温馨提示：</strong></p>
+                        <ul style="margin: 10px 0; padding-left: 20px;">
+                            <li>下载链接有效期为 30 天，请及时下载保存</li>
+                            <li>建议使用电脑或手机浏览器下载</li>
+                            <li>下载后是一个 ZIP 压缩包，解压后即可播放</li>
+                            <li>故事音频为 WAV 格式，支持所有播放器</li>
+                        </ul>
+                    </div>
+                    
+                    <p style="margin-top: 20px;">祝您和${childName}享受美好的亲子时光！</p>
+                </div>
+                <div class="footer">
+                    <p><strong>声宝盒</strong> - 用你的声音，给孩子最好的陪伴</p>
+                    <p>如有问题，请联系客服</p>
+                </div>
+            </div>
+        </body>
+        </html>
+    `;
+
+    try {
+        const result = await transporter.sendMail({
+            from: fromEmail,
+            to: email,
+            subject: `🎉 ${childName}的专属故事已生成完成！`,
+            html: emailHtml
+        });
+
+        console.log('✅ 故事完成通知邮件发送成功');
+        console.log('Message ID:', result.messageId);
+
+        return {
+            success: true,
+            messageId: result.messageId
+        };
+
+    } catch (error: any) {
+        console.error('❌ 发送邮件失败:', error);
+        throw error;
+    }
+}

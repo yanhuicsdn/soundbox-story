@@ -178,19 +178,8 @@ async function uploadFileToFeishu(fileBuffer, fileName) {
  */
 async function saveOrderToFeishu(orderData) {
     try {
-        console.log('📊 开始保存订单到飞书表格...');
-        console.log('📦 接收到的 orderData:', JSON.stringify(orderData, null, 2));
-        
-        // 先查找是否已存在该订单
-        const existingRecord = await findRecordByOrderId(orderData.orderId);
-        
-        if (existingRecord) {
-            console.log('📌 订单已存在，更新订单信息');
-            // 如果订单已存在，更新它
-            return await updateOrderInFeishu(orderData.orderId, orderData);
-        }
-        
-        console.log('📝 订单不存在，创建新订单');
+        console.log('📊 创建新订单到飞书表格...');
+        console.log('📦 订单数据:', JSON.stringify(orderData, null, 2));
         
         // 获取访问令牌
         const accessToken = await getAccessToken();

@@ -125,6 +125,45 @@ async function handlePaymentNotify(params: any) {
                 console.error('❌ 更新飞书表格失败:', feishuError);
             }
 
+            // 调用故事生成 API
+            if (orderData.audioFile && orderData.audioFile.buffer) {
+                try {
+                    const { createStoryTask, getPackageId } = await import('../../../lib/storyApi');
+                    
+                    console.log('🎬 开始创建故事生成任务...');
+                    
+                    const taskResult = await createStoryTask({
+                        babyName: orderDetails.childName,
+                        parentType: orderDetails.voiceType,
+                        packageId: getPackageId(orderDetails.productName),
+                        voiceFileBuffer: orderData.audioFile.buffer,
+                        voiceFileName: orderData.audioFile.filename
+                    });
+
+                    if (taskResult.success && taskResult.taskId) {
+                        console.log('✅ 故事生成任务已创建，task_id:', taskResult.taskId);
+                        
+                        // 更新订单，添加 taskId
+                        try {
+                            const { updateOrderInFeishu } = await import('../../../lib/feishu');
+                            await updateOrderInFeishu(outTradeNo, {
+                                taskId: taskResult.taskId,
+                                storyStatus: '生成中'
+                            });
+                            console.log('✅ 任务ID已保存到订单');
+                        } catch (updateError) {
+                            console.error('❌ 保存任务ID失败:', updateError);
+                        }
+                    } else {
+                        console.error('❌ 创建故事生成任务失败:', taskResult.error);
+                    }
+                } catch (apiError) {
+                    console.error('❌ 调用故事生成API异常:', apiError);
+                }
+            } else {
+                console.warn('⚠️ 没有录音文件，跳过故事生成');
+            }
+
             // 发送确认邮件（带录音附件）
             try {
                 const { sendOrderConfirmationEmail } = await import('../../../lib/email');

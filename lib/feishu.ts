@@ -267,26 +267,31 @@ async function findRecordByOrderId(orderId) {
         // 使用筛选条件查询
         const url = `${FEISHU_CONFIG.baseUrl}/bitable/v1/apps/${FEISHU_CONFIG.baseToken}/tables/${FEISHU_CONFIG.tableId}/records/search`;
         
+        const requestBody = {
+            field_names: ['订单号', '支付状态', 'record_id'],
+            filter: {
+                conjunction: 'and',
+                conditions: [{
+                    field_name: '订单号',
+                    operator: 'is',
+                    value: [orderId]
+                }]
+            }
+        };
+        
+        console.log('📤 查询请求:', JSON.stringify(requestBody, null, 2));
+        
         const response = await fetch(url, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${accessToken}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                field_names: ['订单号', '支付状态', 'record_id'],
-                filter: {
-                    conjunction: 'and',
-                    conditions: [{
-                        field_name: '订单号',
-                        operator: 'is',
-                        value: [orderId]
-                    }]
-                }
-            })
+            body: JSON.stringify(requestBody)
         });
 
         const result = await response.json();
+        console.log('📥 查询响应:', JSON.stringify(result, null, 2));
         
         if (result.code !== 0) {
             console.error('❌ 查询记录失败:', result);
@@ -299,6 +304,7 @@ async function findRecordByOrderId(orderId) {
         }
 
         console.log('⚠️ 未找到订单记录:', orderId);
+        console.log('提示：可能是查询条件不匹配或订单号字段名称不正确');
         return null;
 
     } catch (error) {
@@ -314,13 +320,16 @@ async function findRecordByOrderId(orderId) {
  */
 async function updateOrderInFeishu(orderId, updateData) {
     try {
-        console.log('📝 开始更新订单记录:', orderId);
+        console.log('📝 开始更新订单记录');
+        console.log('订单号:', orderId);
+        console.log('更新数据:', JSON.stringify(updateData, null, 2));
         
         // 先查找记录
         const existingRecord = await findRecordByOrderId(orderId);
         
         if (!existingRecord) {
             console.error('❌ 未找到订单记录:', orderId);
+            console.error('可能原因：1) 订单未创建 2) 订单号不匹配 3) 飞书查询失败');
             throw new Error(`订单 ${orderId} 不存在`);
         }
 

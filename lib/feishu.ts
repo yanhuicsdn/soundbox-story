@@ -268,7 +268,7 @@ async function findRecordByOrderId(orderId) {
         const url = `${FEISHU_CONFIG.baseUrl}/bitable/v1/apps/${FEISHU_CONFIG.baseToken}/tables/${FEISHU_CONFIG.tableId}/records/search`;
         
         const requestBody = {
-            field_names: ['订单号', '支付状态', 'record_id'],
+            field_names: ['订单号', '支付状态'],
             filter: {
                 conjunction: 'and',
                 conditions: [{

@@ -82,28 +82,39 @@ async function handlePaymentNotify(params: any) {
                 console.warn('⚠️ 未收到附加数据 (param)');
             }
 
-            // 准备订单数据
+            // 准备支付更新数据（只包含支付相关字段，不包含用户信息）
+            const paymentUpdateData: any = {
+                transactionId,
+                amount,
+                status: '已支付'
+            };
+            
+            console.log('📦 准备更新的支付数据:', paymentUpdateData);
+
+            // 更新订单支付状态到飞书表格
+            try {
+                const { updateOrderInFeishu } = await import('../../../lib/feishu');
+                
+                // 只更新支付相关字段，不覆盖用户信息
+                await updateOrderInFeishu(outTradeNo, paymentUpdateData);
+                console.log('✅ 订单支付状态已更新到飞书表格');
+            } catch (feishuError) {
+                console.error('❌ 更新飞书表格失败:', feishuError);
+                // 如果订单不存在，记录错误但不影响后续流程
+                console.error('提示：请确保订单在支付前已创建到飞书表格');
+            }
+
+            // 准备故事生成所需的完整订单数据
             const orderData: any = {
                 orderId: outTradeNo,
                 transactionId,
                 amount,
-                productName: orderDetails.productName || '未知产品',
-                childName: orderDetails.childName || '未知',
-                voiceType: orderDetails.voiceType || '未知',
-                email: orderDetails.email || '',
+                productName: orderDetails.productName,
+                childName: orderDetails.childName,
+                voiceType: orderDetails.voiceType,
+                email: orderDetails.email,
                 status: '已支付'
             };
-            
-            console.log('📦 准备的订单数据:', {
-                orderId: orderData.orderId,
-                transactionId: orderData.transactionId,
-                amount: orderData.amount,
-                productName: orderData.productName,
-                childName: orderData.childName,
-                voiceType: orderData.voiceType,
-                email: orderData.email,
-                status: orderData.status
-            });
 
             // 如果有录音文件，解码并添加到订单数据
             if (orderDetails.audioFileBase64 && orderDetails.audioFileName) {
@@ -121,19 +132,6 @@ async function handlePaymentNotify(params: any) {
                 }
             } else {
                 console.warn('⚠️ 未收到录音文件数据');
-            }
-
-            // 更新订单状态到飞书表格
-            try {
-                const { updateOrderInFeishu } = await import('../../../lib/feishu');
-                
-                // 直接更新订单，传入完整的订单数据
-                await updateOrderInFeishu(outTradeNo, orderData);
-                console.log('✅ 订单状态已更新到飞书表格');
-            } catch (feishuError) {
-                console.error('❌ 更新飞书表格失败:', feishuError);
-                // 如果订单不存在，记录错误但不影响后续流程
-                console.error('提示：请确保订单在支付前已创建到飞书表格');
             }
 
             // 调用故事生成 API
